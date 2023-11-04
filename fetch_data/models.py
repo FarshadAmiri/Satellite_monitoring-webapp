@@ -36,7 +36,22 @@ class SatteliteImages(models.Model):
     # maxcc = models.FloatField(validators=[MinValueValidator(0.0), MaxValueValidator(1.0)])
     data_source = models.CharField(max_length=50, choices=DATA_SOURCES)
     
-    original_image = models.ImageField(upload_to='images/', )
+    image_path = models.URLField(primary_key=True, null=False, blank=False, default="Unknown")
+    description = models.CharField(max_length=250)
+    date_fetched = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.id}'
+    
+    def original_image_size(self):
+        return self.original_image.size
+    
+    def annotated_image_size(self):
+        return self.annotated_image.size
+    
+
+class SatteliteImageObjects(models.Model):
+    image = models.ForeignKey(SatteliteImages, related_name='image_id', on_delete=models.CASCADE)
     annotated_image = models.ImageField(upload_to='images/', )
     
     ships_data = models.JSONField()   #coords, score, bbox_dimensions, length
@@ -52,29 +67,15 @@ class SatteliteImages(models.Model):
     n_cargo = models.PositiveIntegerField()
     n_fishing = models.PositiveIntegerField()
     n_boat = models.PositiveIntegerField()
-    
-    description = models.CharField(max_length=250)
-    date_fetched = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f'{self.id}'
-    
-    def original_image_size(self):
-        return self.original_image.size
-    
-    def annotated_image_size(self):
-        return self.annotated_image.size
-    
-class SatteliteImageObjects(models.Model):
-    image = models.ForeignKey(SatteliteImages, related_name='image_id', on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    object_type = models.CharField(max_length=20)
-    object_score = models.FloatField()
-    object_length = models.FloatField()
-    object_bbox_h = models.FloatField()
-    object_bbox_w = models.FloatField()
-    object_bbox_x = models.FloatField()
-    object_bbox_y = models.FloatField()
+    # object_id = models.PositiveIntegerField()
+    # object_type = models.CharField(max_length=20)
+    # object_score = models.FloatField()
+    # object_length = models.FloatField()
+    # object_bbox_h = models.FloatField()
+    # object_bbox_w = models.FloatField()
+    # object_bbox_x = models.FloatField()
+    # object_bbox_y = models.FloatField()
 
     def __str__(self):
         return f'{self.id}'
