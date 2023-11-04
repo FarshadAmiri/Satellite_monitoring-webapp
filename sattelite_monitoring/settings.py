@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-zw$@bet(m*dq5t0w!fdf$w!-&4-(n-jqubk9t(00&hsllx#s-3"
+SECRET_KEY = "django-insecure-!yz_cw2fhyn%6gj**--s3hy_95@kgovel!wn&c)f)+@y3u6z_p"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "fetch_data",
 ]
 
 MIDDLEWARE = [
@@ -75,10 +76,26 @@ WSGI_APPLICATION = "sattelite_monitoring.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "sattelite",
+        "HOST": "localhost",
+        "PORT": "3306",
+        "USER": "root",
+        "PASSWORD": "",
+        "OPTIONS": {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES', innodb_strict_mode=1",
+            'charset': 'utf8mb4',
+            "autocommit": True,
+        }
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # Password validation
