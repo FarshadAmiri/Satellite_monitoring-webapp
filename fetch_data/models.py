@@ -59,8 +59,8 @@ class SatteliteImage(models.Model):
 
     Area_tag = models.ForeignKey(PresetArea, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
     
-    time_start = models.DateField(null=True, blank=True)
-    time_end = models.DateField()
+    time_from = models.DateField(null=True, blank=True)
+    time_to = models.DateField()
     # mosaicking_order = models.CharField(max_length=50, choices=MOSAICKING_ORDER_TYPES)
     # maxcc = models.FloatField(validators=[MinValueValidator(0.0), MaxValueValidator(1.0)])
     data_source = models.CharField(max_length=50, choices=DATA_SOURCES)

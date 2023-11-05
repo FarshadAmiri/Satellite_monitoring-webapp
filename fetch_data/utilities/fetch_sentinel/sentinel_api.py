@@ -231,7 +231,7 @@ def sentinel_query(coords, start_formatted, end_formatted, save_img=False, outpu
     # Save the image
     if save_img:
         if img_name == None:
-            img_name = f"[{lonmin:.4f},{latmin:.4f},{lonmax:.4f},{latmax:.4f}]-{timestamp}).jpg"
+            img_name = f"[{lonmin:.4f},{latmin:.4f},{lonmax:.4f},{latmax:.4f}]-{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}).png"
         elif img_name.endswith((".jpg", ".jpeg", ".png", ".tif", ".tiff")) == False:
             img_name = img_name + ".jpg"
         img_path = os.path.join(output_dir, img_name)

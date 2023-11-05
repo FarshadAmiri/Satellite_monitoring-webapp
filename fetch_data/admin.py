@@ -54,7 +54,7 @@ class PresetAreasAdmin(admin.ModelAdmin):
 
 @admin.register(SatteliteImage)
 class SatteliteImageAdmin(admin.ModelAdmin):
-    list_display = ['x','y','zoom', "Area_tag", "time_start","time_end", "image_path", "date_fetched"]
+    list_display = ['x','y','zoom', "Area_tag", "time_from","time_to", "image_path", "date_fetched"]
     list_display_links = ['image_path',]
     # filter_horizontal = ('tickets',)
 

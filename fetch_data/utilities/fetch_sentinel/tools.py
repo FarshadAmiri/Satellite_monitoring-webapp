@@ -136,30 +136,30 @@ def bbox2xyz(bbox_coords):
 
 
 
-def start_end_time_interpreter(start=None, end=None, n_days_before_date=None, date=None, return_formatted=True):
-    if n_days_before_date != None:
-        if date == None:
+def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=None, base_date=None, return_formatted_only=True):
+    if n_days_before_base_date != None:
+        if base_date == None:
             end = datetime.datetime.now()
-            start = end - datetime.timedelta(days=n_days_before_date)
-        elif type(date) == datetime.datetime:
-            end = date
-            start = end - datetime.timedelta(days=n_days_before_date)
+            start = end - datetime.timedelta(days=n_days_before_base_date)
+        elif type(base_date) == datetime.datetime:
+            end = base_date
+            start = end - datetime.timedelta(days=n_days_before_base_date)
         else:
             end_year, end_month, end_day = end.split('/')
             end = datetime.date(end_year, end_month, end_day)
-            start = end - datetime.timedelta(days=n_days_before_date)
+            start = end - datetime.timedelta(days=n_days_before_base_date)
 
     if type(start)!= datetime.datetime:
         start_year, start_month, start_day = start.split('/')
         start = datetime.date(start_year, start_month, start_day)
     if type(end) != datetime.datetime:
-        end = date
-        start = end - datetime.timedelta(days=n_days_before_date)
+        end = base_date
+        start = end - datetime.timedelta(days=n_days_before_base_date)
 
     start_formatted = datetime.datetime.strftime(start, "%Y-%m-%dT%H:%M:%SZ")
     end_formatted = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%SZ")
     timestamp = f"{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}"
     
-    if return_formatted:
+    if return_formatted_only:
         return [start_formatted, end_formatted, timestamp]
-    return [start, end, timestamp]
+    return [(start, start_formatted), (end, start_formatted), timestamp]

@@ -28,7 +28,7 @@ def territory_fetch(request):
         return render(request, "SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
 
     elif request.method == 'POST':
-        form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date), date overwrite_repetitious, image_store_path
+        form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date, date) overwrite_repetitious, image_store_path
         if form.is_valid():
             x_min = form.cleaned_data['x_min']
             x_max = form.cleaned_data['x_max']
@@ -37,11 +37,14 @@ def territory_fetch(request):
             zoom = form.cleaned_data['zoom']
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
+            n_days_before_date = form.cleaned_data['n_days_before_date']
+            base_date = form.cleaned_data['base_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             image_store_path = form.cleaned_data['image_store_path']
             x_range = [x_min, x_max]
             y_range = [y_min, y_max]
-            store_image_territory(x_range, y_range, zoom, start=None, end=None, n_days_before_date=None, date=None, overwrite_repetitious=False, )
+            store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_date=n_days_before_date, date=base_date,
+                                  overwrite_repetitious=overwrite_repetitious, image_store_path=image_store_path)
             
 
     
