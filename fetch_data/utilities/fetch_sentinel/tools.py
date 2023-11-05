@@ -133,3 +133,33 @@ def bbox2xyz(bbox_coords):
     a = math.tan(math.pi * latmax / 180)
     y = (math.pi - math.log(a + math.sqrt(a**2 + 1), math.e)) * math.pow(2.0, z) / (2*math.pi)
     return x, y, int(z)
+
+
+
+def start_end_time_interpreter(start=None, end=None, n_days_before_date=None, date=None, return_formatted=True):
+    if n_days_before_date != None:
+        if date == None:
+            end = datetime.datetime.now()
+            start = end - datetime.timedelta(days=n_days_before_date)
+        elif type(date) == datetime.datetime:
+            end = date
+            start = end - datetime.timedelta(days=n_days_before_date)
+        else:
+            end_year, end_month, end_day = end.split('/')
+            end = datetime.date(end_year, end_month, end_day)
+            start = end - datetime.timedelta(days=n_days_before_date)
+
+    if type(start)!= datetime.datetime:
+        start_year, start_month, start_day = start.split('/')
+        start = datetime.date(start_year, start_month, start_day)
+    if type(end) != datetime.datetime:
+        end = date
+        start = end - datetime.timedelta(days=n_days_before_date)
+
+    start_formatted = datetime.datetime.strftime(start, "%Y-%m-%dT%H:%M:%SZ")
+    end_formatted = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%SZ")
+    timestamp = f"{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}"
+    
+    if return_formatted:
+        return [start_formatted, end_formatted, timestamp]
+    return [start, end, timestamp]

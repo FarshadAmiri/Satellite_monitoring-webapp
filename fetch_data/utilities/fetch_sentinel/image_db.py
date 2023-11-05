@@ -1,6 +1,7 @@
 import os
 from tqdm import tqdm
 from .sentinel_api import sentinel_query
+from ...models import SatteliteImage
 
 image_db_path = r"D:\SatteliteImages_db"
 
@@ -47,6 +48,7 @@ def store_image_territory(x_range, y_range, z, start=None, end=None, n_days_befo
                                                   date=date, output_img=True, output_timestamp=True, )
                 image_path = os.path.join(path_zxy, f"{timestamp}.png")
                 image.save(image_path)
+                SatteliteImage.objects.create(image_path=image_path, x=i, y=j, z=z, time_start=timestamp)
             else:
                 timestamp = sentinel_query(coords=(i, j, z), start=start, end=end, n_days_before_date=n_days_before_date,
                                                   date=date, output_img=True, output_timestamp=True, return_timestamp_only=True)

@@ -2,7 +2,7 @@ import logging
 from sentinelhub import MimeType, CRS, BBox, DataCollection, bbox_to_dimensions, SHConfig, SentinelHubRequest
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
-from .tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz
+from .tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz, start_end_time_interpreter
 import datetime, requests
 from io import BytesIO
 import numpy as np
@@ -212,33 +212,7 @@ def sentinel_territory(bbox_coords, timeline, config, data_collection=DataCollec
     return concat_image
 
 
-def sentinel_query(coords, start=None, end=None, n_days_before_date=None, date=None, save_img=False, output_dir="",
-                   img_name=None, output_img=False, output_url=False, output_timestamp=False, return_timestamp_only=False):
-    if n_days_before_date != None:
-        if date == None:
-            end = datetime.datetime.now()
-            start = end - datetime.timedelta(days=n_days_before_date)
-        elif type(date) == datetime.datetime:
-            end = date
-            start = end - datetime.timedelta(days=n_days_before_date)
-        else:
-            end_year, end_month, end_day = end.split('/')
-            end = datetime.date(end_year, end_month, end_day)
-            start = end - datetime.timedelta(days=n_days_before_date)
-
-    if type(start)!= datetime.datetime:
-        start_year, start_month, start_day = start.split('/')
-        start = datetime.date(start_year, start_month, start_day)
-    if type(end) != datetime.datetime:
-        end = date
-        start = end - datetime.timedelta(days=n_days_before_date)
-
-    start_formatted = datetime.datetime.strftime(start, "%Y-%m-%dT%H:%M:%SZ")
-    end_formatted = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%SZ")
-    timestamp = f"{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}"
-
-    if return_timestamp_only:
-        return timestamp
+def sentinel_query(coords, start_formatted, end_formatted, save_img=False, output_dir="", img_name=None, output_img=False, output_url=False,):
     
     if len(coords) == 3:
         lonmin, latmin, lonmax, latmax = xyz2bbox(coords)
@@ -268,8 +242,6 @@ def sentinel_query(coords, start=None, end=None, n_days_before_date=None, date=N
         result.append(img)
     if output_url:
         result.append(url)
-    if output_timestamp:
-        result.append(timestamp)
     
     return result
 

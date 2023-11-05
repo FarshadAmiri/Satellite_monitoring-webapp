@@ -1,21 +1,50 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from .utilities.fetch_sentinel.tools import xyz2bbox
 
 
-class PresetAreas(models.Model):
+class PresetArea(models.Model):
     bbox_lon1 = models.FloatField(null=True, blank=True)
     bbox_lat1 = models.FloatField(null=True, blank=True)
     bbox_lon2 = models.FloatField(null=True, blank=True)
     bbox_lat2 = models.FloatField(null=True, blank=True)
 
-    tag = models.CharField(max_length=128, primary_key=True)
-    description = models.TextField(max_length=800)
+    zoom = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
+    x_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    x_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+
+    tag = models.CharField(max_length=128, primary_key=True, unique=True)
+    description = models.TextField(max_length=800, null=True, blank=True,)
 
     def __str__(self):
         return f'{self.tag}'
+    
+    def validate_x_max(self, value):
+        pass
+
+    def validate_y_max(self, value):
+        pass
+
+    def save(self, *args, **kwargs):
+        # Test it later!!!
+        # if not all([self.bbox_lon1, self.bbox_lat1, self.bbox_lon2, self.bbox_lat2]):
+        self.bbox_lon1, self.bbox_lat1, _, _ = xyz2bbox((self.x_min, self.y_max, self.zoom))
+        _, _, self.bbox_lon2, self.bbox_lat2 = xyz2bbox((self.x_max, self.y_min, self.zoom))
+        super(PresetArea, self).save(*args, **kwargs)
+
+    def x_range(self):
+        return f"{self.x_min:.0f} : {self.x_max:.0f}"
+    
+    def y_range(self):
+        return f"{self.y_min:.0f} : {self.y_max:.0f}"
+    
+    def wgs84_coords(self):
+        return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
 
 
-class SatteliteImages(models.Model):
+class SatteliteImage(models.Model):
     MOSAICKING_ORDER_TYPES = [('mostRecent', 'mostRecent'), ('leastCC', 'leastCC'), ('leastRecent', 'leastRecent')]
     DATA_SOURCES = [("SENTINEL2_L2A", "Sentinel2_L2A"), ("SENTINEL2_L1C", "Sentinel2_L1C")]
     
@@ -28,7 +57,7 @@ class SatteliteImages(models.Model):
     y = models.FloatField(null=True, blank=True)
     zoom = models.FloatField(null=True, blank=True)
 
-    Area_tag = models.ForeignKey(PresetAreas, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
+    Area_tag = models.ForeignKey(PresetArea, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
     
     time_start = models.DateField(null=True, blank=True)
     time_end = models.DateField()
@@ -48,10 +77,10 @@ class SatteliteImages(models.Model):
     
     def annotated_image_size(self):
         return self.annotated_image.size
-    
 
-class SatteliteImageObjects(models.Model):
-    image = models.ForeignKey(SatteliteImages, related_name='image_id', on_delete=models.CASCADE)
+
+class SatteliteImageObject(models.Model):
+    image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
     annotated_image = models.ImageField(upload_to='images/', )
     
     ships_data = models.JSONField()   #coords, score, bbox_dimensions, length
