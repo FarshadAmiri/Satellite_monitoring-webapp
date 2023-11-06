@@ -7,8 +7,8 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput, TimePickerInput, 
 
 class SentinelFetchForm(forms.Form):
     class Meta:
-        model = SatteliteImage
-        fields = "__all__"
+        # model = SatteliteImage
+        # fields = "__all__"
         widgets = {
             'start_date': DatePickerInput(),
             'end_date': DatePickerInput(range_from="start_date"),
@@ -16,17 +16,17 @@ class SentinelFetchForm(forms.Form):
     # CITIES = City.objects.only('name')
     # origin = forms.ModelChoiceField(queryset=CITIES)
     # destination = forms.ModelChoiceField(queryset=CITIES)
-    x_min = forms.IntegerField(min_value=0, max_value=500000)
+    x_min = forms.IntegerField(min_value=0, max_value=500000,)
     x_max = forms.IntegerField(min_value=0, max_value=500000)
     y_min = forms.IntegerField(min_value=0, max_value=500000)
     y_max = forms.IntegerField(min_value=0, max_value=500000)
     zoom = forms.IntegerField(min_value=0, max_value=50)
-    start_date = forms.DateField(widget=DatePickerInput())
-    end_date = forms.DateField(widget=DatePickerInput())
-    n_days_before_date = forms.IntegerField(min_value=0, max_value=365)
-    base_date = forms.DateField()
-    overwrite_repetitious = forms.BooleanField()
-    image_store_path = forms.CharField()
+    start_date = forms.DateField(widget=DatePickerInput(), required=False)
+    end_date = forms.DateField(widget=DatePickerInput(),  required=False)
+    n_days_before_base_date = forms.IntegerField(min_value=0, max_value=365,  required=False)
+    base_date = forms.DateField(required=False)
+    overwrite_repetitious = forms.BooleanField(required=False)
+    image_store_path = forms.CharField( required=False)
 
     def clean_x_min(self):
         x_min = self.cleaned_data['x_min']
@@ -58,31 +58,32 @@ class SentinelFetchForm(forms.Form):
             raise forms.ValidationError('Invalid zoom value')
         return zoom
 
-    def clean_start_date(self):
-        start_date = self.cleaned_data['start_date']
-        if start_date < datetime.datetime.now():
-            raise forms.ValidationError('Start date cannot be in the past')
-        return start_date
+    # def clean_start_date(self):
+    #     start_date = self.cleaned_data['start_date']
+    #     if start_date < datetime.datetime.now():
+    #         raise forms.ValidationError('Start date cannot be in the past')
+    #     return start_date
 
-    def clean_end_date(self):
-        end_date = self.cleaned_data['end_date']
-        if end_date < datetime.datetime.now():
-            raise forms.ValidationError('End date cannot be in the past')
-        return end_date
+    # def clean_end_date(self):
+    #     end_date = self.cleaned_data['end_date']
+    #     if end_date < datetime.datetime.now():
+    #         raise forms.ValidationError('End date cannot be in the past')
+    #     return end_date
 
-    def clean_n_days_before_date(self):
-        n_days_before_date = self.cleaned_data['n_days_before_date']
-        if n_days_before_date < 0 or n_days_before_date > 365:
-            raise forms.ValidationError('Invalid n_days_before_date value')
-        return n_days_before_date
+    def clean_n_days_before_base_date(self):
+        n_days_before_base_date = self.cleaned_data['n_days_before_base_date']
+        if n_days_before_base_date != None:
+            if n_days_before_base_date < 0 or n_days_before_base_date > 365:
+                raise forms.ValidationError('Invalid n_days_before_base_date value')
+        return n_days_before_base_date
 
-    def clean_base_date(self):
-        base_date = self.cleaned_data['base_date']
-        if base_date < datetime.datetime.now():
-            raise forms.ValidationError('Base date cannot be in the past')
-        return base_date
+    # def clean_base_date(self):
+    #     base_date = self.cleaned_data['base_date']
+    #     if base_date < datetime.datetime.now():
+    #         raise forms.ValidationError('Base date cannot be in the past')
+    #     return base_date
 
-    def clean_overwrite_repetitious(self):
-        overwrite_repetitious = self.cleaned_data['overwrite_repetitious']
-        if overwrite_repetitious not in ['true', 'false']:
-            raise forms.ValidationError('Invalid overwrite_repetitious')
+    # def clean_overwrite_repetitious(self):
+    #     overwrite_repetitious = self.cleaned_data['overwrite_repetitious']
+    #     if overwrite_repetitious not in ['true', 'false']:
+    #         raise forms.ValidationError('Invalid overwrite_repetitious')

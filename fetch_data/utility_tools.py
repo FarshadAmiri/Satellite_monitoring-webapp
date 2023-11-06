@@ -149,10 +149,10 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
             end = datetime.date(end_year, end_month, end_day)
             start = end - datetime.timedelta(days=n_days_before_base_date)
 
-    if type(start)!= datetime.datetime:
+    if type(start) not in [datetime.datetime, datetime.date]:
         start_year, start_month, start_day = start.split('/')
         start = datetime.date(start_year, start_month, start_day)
-    if type(end) != datetime.datetime:
+    if type(end) not in [datetime.datetime, datetime.date]:
         end = base_date
         start = end - datetime.timedelta(days=n_days_before_base_date)
 

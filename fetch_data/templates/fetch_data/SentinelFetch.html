@@ -14,7 +14,7 @@
     {{ form.media }}
     <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {{ form.as_p}}
         <button type="submit">Submit</button>
     </form>
 </body>
