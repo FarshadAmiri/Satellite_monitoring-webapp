@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from .utilities.fetch_sentinel.tools import xyz2bbox
-
+from .utility_tools import xyz2bbox
 
 class PresetArea(models.Model):
     bbox_lon1 = models.FloatField(null=True, blank=True)
@@ -15,17 +14,17 @@ class PresetArea(models.Model):
     y_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
     y_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
 
-    tag = models.CharField(max_length=128, primary_key=True, unique=True)
+    tag = models.CharField(max_length=128, primary_key=True,)
     description = models.TextField(max_length=800, null=True, blank=True,)
 
-    def __str__(self):
-        return f'{self.tag}'
+    # def __str__(self):
+    #     return f'{self.tag}'
     
-    def validate_x_max(self, value):
-        pass
+    # def validate_x_max(self, value):
+    #     pass
 
-    def validate_y_max(self, value):
-        pass
+    # def validate_y_max(self, value):
+    #     pass
 
     def save(self, *args, **kwargs):
         # Test it later!!!
@@ -41,7 +40,10 @@ class PresetArea(models.Model):
         return f"{self.y_min:.0f} : {self.y_max:.0f}"
     
     def wgs84_coords(self):
-        return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
+        try:
+            return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
+        except:
+            return "-"
 
 
 class SatteliteImage(models.Model):
@@ -70,7 +72,7 @@ class SatteliteImage(models.Model):
     date_fetched = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f'{self.id}'
+        return f'{self.image_path}'
     
     def original_image_size(self):
         return self.original_image.size
@@ -78,6 +80,8 @@ class SatteliteImage(models.Model):
     def annotated_image_size(self):
         return self.annotated_image.size
 
+    def wgs84_coords(self):
+        return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
 
 class SatteliteImageObject(models.Model):
     image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)

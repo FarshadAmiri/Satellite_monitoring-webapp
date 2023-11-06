@@ -162,4 +162,4 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
     
     if return_formatted_only:
         return [start_formatted, end_formatted, timestamp]
-    return [(start, start_formatted), (end, start_formatted), timestamp]
+    return [(start, start_formatted), (end, end_formatted), timestamp]

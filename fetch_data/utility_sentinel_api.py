@@ -2,7 +2,7 @@ import logging
 from sentinelhub import MimeType, CRS, BBox, DataCollection, bbox_to_dimensions, SHConfig, SentinelHubRequest
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
-from .tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz, start_end_time_interpreter
+from .utility_tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz, start_end_time_interpreter
 import datetime, requests
 from io import BytesIO
 import numpy as np
@@ -231,7 +231,7 @@ def sentinel_query(coords, start_formatted, end_formatted, save_img=False, outpu
     # Save the image
     if save_img:
         if img_name == None:
-            img_name = f"[{lonmin:.4f},{latmin:.4f},{lonmax:.4f},{latmax:.4f}]-{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}).png"
+            img_name = f"[{lonmin:.4f},{latmin:.4f},{lonmax:.4f},{latmax:.4f}]-{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}).jpg"
         elif img_name.endswith((".jpg", ".jpeg", ".png", ".tif", ".tiff")) == False:
             img_name = img_name + ".jpg"
         img_path = os.path.join(output_dir, img_name)

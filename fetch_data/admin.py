@@ -33,7 +33,7 @@ class PresetAreasAdmin(admin.ModelAdmin):
             "fields": ("tag", "zoom", ("x_min", "x_max"), ("y_min", "y_max"),)
         }),
         ("Coordinations & info", {
-            'fields':('bbox_lon1', 'bbox_lat1', "bbox_lon2", "bbox_lat2", ("wgs84_coords"))
+            'fields':('bbox_lon1', 'bbox_lat1', "bbox_lon2", "bbox_lat2",("wgs84_coords"))
         }),
         # ('More info' , {
         #     'classes':('collapse',), 'fields':('description')
@@ -54,10 +54,27 @@ class PresetAreasAdmin(admin.ModelAdmin):
 
 @admin.register(SatteliteImage)
 class SatteliteImageAdmin(admin.ModelAdmin):
-    list_display = ['x','y','zoom', "Area_tag", "time_from","time_to", "image_path", "date_fetched"]
+    list_display = ["time_from","time_to", 'x','y','zoom', "Area_tag", "image_path", "date_fetched"]
     list_display_links = ['image_path',]
-    # filter_horizontal = ('tickets',)
+    ordering = ['date_fetched']
+    list_filter = [('zoom', custom_titled_filter('zoom')), ('date_fetched', custom_titled_filter('date_fetched')),
+                   ('time_from', custom_titled_filter('time_from')), ('time_to', custom_titled_filter('time_to'))]
+    search_fields = ["x", "y", "zoom", "time_from", "time_to", "bbox_lon1", "bbox_lat1", "bbox_lon2", "bbox_lat2", "Area_tag"]
+    # list_editable = ['tag',]
+    readonly_fields = ["bbox_lon1", "bbox_lat1", "bbox_lon2", "bbox_lat2", "wgs84_coords"]
+    # date_hierarchy = 'datetime'
 
+    fieldsets = (
+        ("Area specifications", {
+            "fields": (("Area_tag", "zoom"), ("x", "y"))
+        }),
+        ("Time specifications", {
+            "fields": ("time_from", "time_to")
+        }),
+        ("Coordinations & info", {
+            'fields':('bbox_lon1', 'bbox_lat1', "bbox_lon2", "bbox_lat2", ("wgs84_coords"))
+        }),
+    )
 
 @admin.register(SatteliteImageObject)
 class SatteliteImageObjectAdmin(admin.ModelAdmin):
