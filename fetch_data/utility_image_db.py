@@ -51,7 +51,7 @@ def store_image_territory(x_range, y_range, zoom, start=None, end=None, n_days_b
             image_path = os.path.join(path_zxy, f"{timestamp}.png")
 
             if overwrite_repetitious or (os.path.exists(image_path) == False):
-                image = sentinel_query(coords=(i, j, zoom), start_formatted=start_formatted, end_formatted=end_formatted, output_img=True)[0]
+                image, url = sentinel_query(coords=(i, j, zoom), start_formatted=start_formatted, end_formatted=end_formatted, output_img=True, output_url=True)
                 lonmin, latmin, lonmax, latmax = map(lambda i: round(i,6), xyz2bbox((i, j, zoom)))
                 image.save(image_path)
                 SatteliteImage.objects.update_or_create(image_path=image_path, x=i, y=j, zoom=zoom, time_from=start_datetime, time_to=end_datetime,

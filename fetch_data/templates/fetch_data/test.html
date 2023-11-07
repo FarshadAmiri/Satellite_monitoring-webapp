@@ -1,0 +1,55 @@
+<form>
+  <div class="form-group">
+    <label for="exampleFormControlInput1">Email address</label>
+    <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="name@example.com">
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlSelect1">Example select</label>
+    <select class="form-control" id="exampleFormControlSelect1">
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlSelect2">Example multiple select</label>
+    <select multiple class="form-control" id="exampleFormControlSelect2">
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+      <option>5</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="exampleFormControlTextarea1">Example textarea</label>
+    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+  </div>
+</form>
+
+
+<form> 
+<label for="section1">Section 1</label>
+<input type="checkbox" id="section1" name="section1" value="use" onchange="toggleSection()">
+<label for="section2">Section 2</label>
+<input type="checkbox" id="section2" name="section2" value="use" onchange="toggleSection()">
+
+<div id="dateSection1" style="display: none;">
+<label for="date1">Date 1</label>
+<input type="date" id="date1" name="date1">
+<label for="date2">Date 2</label>
+<input type="date" id="date2" name="date2">
+</div>
+<div id="dateSection2" style="display: none;">
+<label for="date3">Date 3</label>
+<input type="date" id="date3" name="date3">
+<label for="date4">Date 4</label>
+<input type="date" id="date4" name="date4">
+</div>
+<script> function toggleSection() { var section1 = document.getElementById("section1"); var section2 = document.getElementById("section2"); var dateSection1 = document.getElementById("dateSection1"); var dateSection2 = document.getElementById("dateSection2"); if (section1.checked) { dateSection1.style.display = "block"; dateSection2.style.display = "none"; section2.disabled = true; } else if (section2.checked) { dateSection1.style.display = "none"; dateSection2.style.display = "block"; section1.disabled = true; } else { dateSection1.style.display = "none"; dateSection2.style.display = "none"; section1.disabled = false; section2.disabled = false; } } </script>
+</form>
+
+
+

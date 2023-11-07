@@ -1,0 +1,21 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images Fetched!</title>
+</head>
+<body>
+<div class="form-group mx-sm-2 mb-2">
+    <h1>Images fetched successfully!</h1>
+    <h4>Request parameteres:</h3>
+    {% for field, value in form_cleaned_data.items %}
+        <h5>{{field}} : {{value}}</h4>
+    {% endfor %}
+<a href="{% url 'fetch_data:SentinelFetch' %}">Back to Homepage</a>
+<div class="form-group mx-sm-2 mb-2">
+</body>
+</html>

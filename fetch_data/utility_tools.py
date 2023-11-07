@@ -141,7 +141,7 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
         if base_date == None:
             end = datetime.datetime.now()
             start = end - datetime.timedelta(days=n_days_before_base_date)
-        elif type(base_date) == datetime.datetime:
+        elif type(base_date) in [datetime.datetime, datetime.date]:
             end = base_date
             start = end - datetime.timedelta(days=n_days_before_base_date)
         else:

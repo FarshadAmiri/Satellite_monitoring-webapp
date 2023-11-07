@@ -1,0 +1,16 @@
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit your information</title>
+</head>
+<body>
+<h1>Here you can update your personal information</h1>
+<form action = "{% url 'users:edit_info' user.username%}" method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <input type="submit">
+</form>
+</body>
+</html>

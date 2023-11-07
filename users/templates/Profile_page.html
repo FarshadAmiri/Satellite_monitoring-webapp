@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ user.firstname }}'s Profile Page</title>
+</head>
+<body>
+     {% if user.is_superuser %}
+        <h2>You are a Superuser</h2>
+        <br>
+    {% endif %} 
+    {% comment %} {% else %} {% endcomment %}
+    <h3>Name: {{ user.first_name }} {{ user.last_name }}</h3>
+    <h3>Username: {{ user.username }}</h3>
+    <h3>Email: {{ user.email }}</h3>
+{#    {% if phone %}#}
+    <h3>Phone Number: {{ user.phone }}</h3>
+    {% comment %} {% endif %} {% endcomment %}
+{#    {% endif %}#}
+    {% comment %} <a href="{% url 'users:change_password' %}">Change Password</a> {% endcomment %}
+    <br>
+    {% comment %} <a href="{% url 'users:edit_info' user.username %}">Update your personal information</a> {% endcomment %}
+    <br>
+    {% comment %} <a href="{% url 'users:delete_account' %}">Delete Account</a> {% endcomment %}
+
+    <p></p>
+
+
+</body>
+</html>

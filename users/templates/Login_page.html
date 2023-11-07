@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log in or Sign Up</title>
+</head>
+<body>
+    {% if message %}
+        <h2>{{ message }}</h2>
+    {% endif %}
+    <h1>Log in:</h1>
+    <form action="{% url 'users:login' %}" method='post'>
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Username">
+        <input type="password" name="password" placeholder="Password">
+        <input type="submit" Value="Log in">
+    </form>
+    {% comment %} <a href="{% url 'users:signup' %}">Sign up</a> {% endcomment %}
+</body>
+</html>
