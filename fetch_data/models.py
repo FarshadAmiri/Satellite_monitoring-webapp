@@ -33,6 +33,9 @@ class PresetArea(models.Model):
         _, _, self.bbox_lon2, self.bbox_lat2 = xyz2bbox((self.x_max, self.y_min, self.zoom))
         super(PresetArea, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return self.tag
+
     def x_range(self):
         return f"{self.x_min:.0f} : {self.x_max:.0f}"
     

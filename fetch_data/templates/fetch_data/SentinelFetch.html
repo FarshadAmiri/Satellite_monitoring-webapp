@@ -1,41 +1,52 @@
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fetch data</title>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Fetch data</title>
+   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
 </head>
 <body>
-    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}">
-    </script>
-    <div class="form-group mx-sm-2 mb-2">
-    {% if not request.user.is_authenticated %}
-        <a href="{% url 'users:login' %}">Log in/Sign up</a>
-    {% else %}
-    <br>
-    <div>
-        <h6>Username: {{ user.username }} --- Email: {{ user.email }}</h4>
-        <a href="{% url 'users:logout' %}">Log out</a>
-        <a href="{% url 'users:profile' %}">Profile Page</a>
-    {% endif %}
-    </div>
-    <br>
-    <h2>Fetch images from Sentinel-hub</h2>
-    {{ form.media }}
-    <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
-        {% csrf_token %}        
-        {% for field in form %}
-            <div class="form-group mx-sm-3 mb-2">
-            <label> {{ field.name }}</label>
-            {{ field }}
-            </div>
-        {% endfor %}
-        <div class="form-group mx-sm-3 mb-2">
-        <button type="submit mx-sm-3" class="btn btn-primary">Submit</button>
-        </div>
-    </form>
+   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}">
+   </script>
+   <div class="form-group mx-sm-2 mb-2">
+   {% if not request.user.is_authenticated %}
+       <a href="{% url 'users:login' %}">Log in/Sign up</a>
+   {% else %}
+   <br>
+   <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;">
+       <h6>Username: {{ user.username }}</h6> 
+       <h6> Email: {{ user.email }}</h6>
+       <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
+       <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
+   {% endif %}
+   </div>
+   <br>
+   <div style="background-color: #e1f2d0; padding: 20px; border-radius: 10px;">
+   <h2 style="font-family: 'Helvetica', serif;">Fetch images from Sentinel-hub</h2>
+   {{ form.media }}
+   <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
+       {% csrf_token %}        
+       {% for field in form %}
+           {% if field.name == "preset_area" %}
+               <div class="form-group mx-sm-3 mb-2">
+               <label>Preset area</label>
+               {{ field }}
+               <button type="submit" class="btn btn-primary" name="fill_coords" style="color" >Fill coordinations</button>
+               </div>
+           {% else %}
+           <div class="form-group mx-sm-3 mb-2">
+           <label> {{ field.name }}</label>
+           {{ field }}
+           </div>
+       {% endif %}
+       {% endfor %}
+       <div class="form-group mx-sm-3 mb-2">
+       <button type="submit" class="btn btn-primary" name="fetch">Get images</button>
+       </div>
+       </div>
+   </form>
 </body>
 </html>

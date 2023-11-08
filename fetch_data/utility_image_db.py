@@ -4,7 +4,7 @@ from .utility_sentinel_api import sentinel_query
 from .utility_tools import start_end_time_interpreter, xyz2bbox
 from .models import SatteliteImage
 
-# image_db_path = r"D:\SatteliteImages_db"
+image_store_path = r"D:\SatteliteImages_db"
 
 def store_image(x, y, zoom, start=None, end=None, n_days_before_date=None, date=None):
     global image_db_path
@@ -27,7 +27,7 @@ def store_image(x, y, zoom, start=None, end=None, n_days_before_date=None, date=
 
 
 def store_image_territory(x_range, y_range, zoom, start=None, end=None, n_days_before_base_date=None, base_date=None,
-                          overwrite_repetitious=False, image_store_path="D:\SatteliteImages_db"):
+                          overwrite_repetitious=False, image_store_path=image_store_path):
 
     if os.path.exists(image_store_path) == False:
         os.mkdir(image_store_path)

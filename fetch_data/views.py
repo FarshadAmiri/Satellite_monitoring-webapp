@@ -12,10 +12,10 @@ from .utility_image_db import *
 # @login_required(login_url='users:login', )
 def territory_fetch(request):
     if request.method == 'GET':
-        form = SentinelFetchForm(initial={"x_min": 21390, "x_max": 21400, "y_min": 14030, "y_max": 14035, "zoom": 15, "image_store_path": r"D:\SatteliteImages_db"})
+        form = SentinelFetchForm()
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
 
-    elif request.method == 'POST' and request.user.is_authenticated:
+    elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
         form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date, date) overwrite_repetitious, image_store_path
         if form.is_valid():
             x_min = form.cleaned_data['x_min']
@@ -28,7 +28,6 @@ def territory_fetch(request):
             n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
             base_date = form.cleaned_data['base_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
-            image_store_path = form.cleaned_data['image_store_path']
             x_range = [x_min, x_max]
             y_range = [y_min, y_max]
             print("start_date", type(start_date))
@@ -41,15 +40,35 @@ def territory_fetch(request):
             print("overwrite_repetitious:", overwrite_repetitious)
             print()
             store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date, base_date=base_date,
-                                  overwrite_repetitious=overwrite_repetitious, image_store_path=image_store_path)
+                                  overwrite_repetitious=overwrite_repetitious, )
             print(form.cleaned_data)
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
             return render(request, "fetch_data/error.html", context={'errors': form.errors})
     
-    elif request.method == 'POST' and request.user.is_authenticated == False:
+    elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated == False:
         message = "Please login first"
         return HttpResponseRedirect(reverse('users:login'))
+    
+    elif request.method == 'POST' and 'fill_coords' in request.POST:
+        form = SentinelFetchForm(request.POST)
+        if form.is_valid():
+            preset_area_id = form.cleaned_data['preset_area']
+            preset_area = PresetArea.objects.get(tag=preset_area_id)
+
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            base_date = form.cleaned_data['base_date']
+            n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
+            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
+            form = SentinelFetchForm(initial={"x_min": preset_area.x_min, "x_max": preset_area.x_max, "y_min": preset_area.y_min,
+                                              "y_max": preset_area.y_max,"zoom": preset_area.zoom, "start_date": start_date, "end_date": end_date,
+                                              "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
+                                              "overwrite_repetitious": overwrite_repetitious
+                                               })
+            return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
+
+
 
 
 def test(request):

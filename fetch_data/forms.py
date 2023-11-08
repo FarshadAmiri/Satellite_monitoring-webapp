@@ -7,56 +7,60 @@ from bootstrap_datepicker_plus.widgets import DatePickerInput, TimePickerInput, 
 
 class SentinelFetchForm(forms.Form):
     class Meta:
-        # model = SatteliteImage
-        # fields = "__all__"
+        model = PresetArea
+        fields = ['tag', 'x_min', 'x_max', 'y_min', 'y_max']
         widgets = {
             'start_date': DatePickerInput(),
             'end_date': DatePickerInput(range_from="start_date"),
             'base_date': DatePickerInput()
-        }
-    # CITIES = City.objects.only('name')
-    # origin = forms.ModelChoiceField(queryset=CITIES)
-    # destination = forms.ModelChoiceField(queryset=CITIES)
-    x_min = forms.IntegerField(min_value=0, max_value=500000,)
-    x_max = forms.IntegerField(min_value=0, max_value=500000)
-    y_min = forms.IntegerField(min_value=0, max_value=500000)
-    y_max = forms.IntegerField(min_value=0, max_value=500000)
-    zoom = forms.IntegerField(min_value=0, max_value=50)
+            }
+        
+    preset_areas_queryset = PresetArea.objects.all().order_by('tag')
+    preset_area = forms.ModelChoiceField(queryset=preset_areas_queryset, required=False)
+    x_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    zoom = forms.IntegerField(min_value=0, max_value=50, required=False)
     start_date = forms.DateField(widget=DatePickerInput(), required=False)
     end_date = forms.DateField(widget=DatePickerInput(),  required=False)
     base_date = forms.DateField(widget=DatePickerInput(), required=False)
     n_days_before_base_date = forms.IntegerField(min_value=0, max_value=365,  required=False)
     overwrite_repetitious = forms.BooleanField(required=False)
-    image_store_path = forms.CharField( required=False)
 
     def clean_x_min(self):
         x_min = self.cleaned_data['x_min']
-        if x_min < 0 or x_min > 500000:
-            raise forms.ValidationError('Invalid x_min value')
+        if x_min != None:
+            if x_min < 0 or x_min > 500000:
+                raise forms.ValidationError('Invalid x_min value')
         return x_min
 
     def clean_x_max(self):
         x_max = self.cleaned_data['x_max']
-        if x_max < 0 or x_max > 500000:
-            raise forms.ValidationError('Invalid x_max value')
+        if x_max != None:
+            if x_max < 0 or x_max > 500000:
+                raise forms.ValidationError('Invalid x_max value')
         return x_max
 
     def clean_y_min(self):
         y_min = self.cleaned_data['y_min']
-        if y_min < 0 or y_min > 500000:
-            raise forms.ValidationError('Invalid y_min value')
+        if y_min != None:
+            if y_min < 0 or y_min > 500000:
+                raise forms.ValidationError('Invalid y_min value')
         return y_min
 
     def clean_y_max(self):
         y_max = self.cleaned_data['y_max']
-        if y_max < 0 or y_max > 500000:
-            raise forms.ValidationError('Invalid y_max value')
+        if y_max != None:
+            if y_max < 0 or y_max > 500000:
+                raise forms.ValidationError('Invalid y_max value')
         return y_max
 
     def clean_zoom(self):
         zoom = self.cleaned_data['zoom']
-        if zoom < 0 or zoom > 50:
-            raise forms.ValidationError('Invalid zoom value')
+        if zoom != None:
+            if zoom < 0 or zoom > 50:
+                raise forms.ValidationError('Invalid zoom value')
         return zoom
 
     def clean_start_date(self):
