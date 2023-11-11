@@ -2,7 +2,7 @@ import logging
 from sentinelhub import MimeType, CRS, BBox, DataCollection, bbox_to_dimensions, SHConfig, SentinelHubRequest
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
-from .utility_tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz, start_end_time_interpreter
+from .tools import bbox_geometry_calculator, bbox_divide, xyz2bbox, bbox2xyz, start_end_time_interpreter
 import datetime, requests
 from io import BytesIO
 import numpy as np

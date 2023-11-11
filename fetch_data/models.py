@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from .utility_tools import xyz2bbox
+from fetch_data.utilities.tools import xyz2bbox
 
 class PresetArea(models.Model):
     bbox_lon1 = models.FloatField(null=True, blank=True)

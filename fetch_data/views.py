@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .forms import *
-from .utility_image_db import *
+from fetch_data.utilities.tools import territory_divider
+from fetch_data.utilities.image_db import *
 from .serializers import *
 
 
@@ -35,17 +36,15 @@ def territory_fetch(request):
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             x_range = [int(x_min), int(x_max)]
             y_range = [int(y_min), int(y_max)]
-            # print("start_date", type(start_date))
-            # print("start_date:", start_date)
-            # print("end_date", type(end_date))
-            # print("end:", end_date)
-            # print("n_days_before_base_date", type(n_days_before_base_date))
-            # print("base_date", type(base_date))
-            # print()
-            # print("overwrite_repetitious:", overwrite_repetitious)
-            # print()
-            store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date, base_date=base_date,
-                                  overwrite_repetitious=overwrite_repetitious, )
+
+            territories = territory_divider(x_range, y_range, piece_size=70)
+            print(territories)
+            for territory in territories:
+                for sub_territory in territory:
+                    x_range = sub_territory[0]
+                    y_range = sub_territory[1]
+                    territory_fetch_inference(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date,
+                                              base_date=base_date, overwrite_repetitious=overwrite_repetitious, )
             # print(form.cleaned_data)
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
@@ -116,7 +115,7 @@ class territory_fetch_APIView(APIView):
                                                         return_formatted_only=False)
             start_date, end_date = time_interpreted[0][0], time_interpreted[1][0]
 
-            store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, overwrite_repetitious=overwrite_repetitious, )
+            territory_fetch_inference(x_range, y_range, zoom, start=start_date, end=end_date, overwrite_repetitious=overwrite_repetitious, )
 
             request_parameters = {"x_min": x_min, "y_min": y_min, "y_max": y_max, "zoom": zoom, "start_date": start_date, "end_date": end_date,
                                 "overwrite_repetitious": overwrite_repetitious}

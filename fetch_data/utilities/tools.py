@@ -135,6 +135,12 @@ def bbox2xyz(bbox_coords):
     return x, y, int(z)
 
 
+def xyz2bbox_territory(x_range, y_range, zoom):
+    lonmin, _, _, latmax = xyz2bbox((x_range[0], y_range[0], zoom))
+    _, latmin, lonmax, _ = xyz2bbox((x_range[1], y_range[1], zoom))
+    coords = (lonmin, latmin, lonmax, latmax)
+    return coords
+
 
 def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=None, base_date=None, return_formatted_only=True):
     if n_days_before_base_date != None:
@@ -183,7 +189,7 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
 
 
 
-def territory_divider(x_range, y_range, zoom, piece_size:70):
+def territory_divider(x_range, y_range, piece_size=70):
     x_min_ref , x_max_ref, y_min_ref, y_max_ref = min(x_range), max(x_range), min(y_range), max(y_range)
     x_length = x_max_ref - x_min_ref
     y_length = y_max_ref - y_min_ref
@@ -198,8 +204,8 @@ def territory_divider(x_range, y_range, zoom, piece_size:70):
             y_remainder = y_length % i
             y_pieces_opt = i
 
-    x_no_steps = int(x_length//x_pieces_opt)
-    y_no_steps = int(y_length//y_pieces_opt)
+    x_no_steps = max(int(x_length//x_pieces_opt), 1)
+    y_no_steps = max(int(y_length//y_pieces_opt), 1)
     territories = []
     for h_partition in range(y_no_steps):
         y_min = y_min_ref + h_partition * y_pieces_opt
