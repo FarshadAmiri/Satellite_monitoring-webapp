@@ -138,6 +138,10 @@ def bbox2xyz(bbox_coords):
 
 def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=None, base_date=None, return_formatted_only=True):
     if n_days_before_base_date != None:
+        try:
+            n_days_before_base_date = int(n_days_before_base_date)
+        except:
+            raise ValueError("n_days_before_base_date must be an integer or None.")
         if base_date == None:
             end = datetime.datetime.now()
             start = end - datetime.timedelta(days=n_days_before_base_date)
@@ -145,16 +149,29 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
             end = base_date
             start = end - datetime.timedelta(days=n_days_before_base_date)
         else:
-            end_year, end_month, end_day = end.split('/')
+            try:
+                end_year, end_month, end_day = map(int, end.split('/'))
+            except:
+                end_year, end_month, end_day = map(int, end.split('-'))
             end = datetime.date(end_year, end_month, end_day)
             start = end - datetime.timedelta(days=n_days_before_base_date)
 
     if type(start) not in [datetime.datetime, datetime.date]:
-        start_year, start_month, start_day = start.split('/')
-        start = datetime.date(start_year, start_month, start_day)
+        try:
+            start_year, start_month, start_day = map(int, start.split('/'))
+        except:
+            start_year, start_month, start_day = map(int, start.split('-'))
+        start = datetime.date(int(start_year), int(start_month), int(start_day))
+    
     if type(end) not in [datetime.datetime, datetime.date]:
-        end = base_date
-        start = end - datetime.timedelta(days=n_days_before_base_date)
+        try:
+            end_year, end_month, end_day = map(int, end.split('/'))
+        except:
+            end_year, end_month, end_day = map(int, end.split('-'))
+        end = datetime.date(int(end_year), int(end_month), int(end_day))
+    # if type(end) not in [datetime.datetime, datetime.date]:
+    #     end = base_date
+    #     start = end - datetime.timedelta(days=n_days_before_base_date)
 
     start_formatted = datetime.datetime.strftime(start, "%Y-%m-%dT%H:%M:%SZ")
     end_formatted = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%SZ")
@@ -163,3 +180,34 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
     if return_formatted_only:
         return [start_formatted, end_formatted, timestamp]
     return [(start, start_formatted), (end, end_formatted), timestamp]
+
+
+
+def territory_divider(x_range, y_range, zoom, piece_size:70):
+    x_min_ref , x_max_ref, y_min_ref, y_max_ref = min(x_range), max(x_range), min(y_range), max(y_range)
+    x_length = x_max_ref - x_min_ref
+    y_length = y_max_ref - y_min_ref
+
+    x_remainder, y_remainder, x_pieces_opt, y_pieces_opt = piece_size, piece_size, piece_size, piece_size
+    piece_size_probable_range= range(int(0.7 * piece_size), int(1.3 * piece_size + 1))
+    for i in piece_size_probable_range:
+        if (x_length % i) < x_remainder:
+            x_remainder = x_length % i
+            x_pieces_opt = i
+        if (y_length % i) < y_remainder:
+            y_remainder = y_length % i
+            y_pieces_opt = i
+
+    x_no_steps = int(x_length//x_pieces_opt)
+    y_no_steps = int(y_length//y_pieces_opt)
+    territories = []
+    for h_partition in range(y_no_steps):
+        y_min = y_min_ref + h_partition * y_pieces_opt
+        y_max = y_max_ref if (h_partition == y_no_steps - 1) else (y_min + y_pieces_opt)
+        territories_row = []
+        for w_partition in range(x_no_steps):
+            x_min = x_min_ref + w_partition * x_pieces_opt
+            x_max = x_max_ref if (w_partition == x_no_steps - 1) else (x_min + x_pieces_opt)
+            territories_row.append([(x_min, x_max) , (y_min, y_max)])
+        territories.append(territories_row)
+    return territories

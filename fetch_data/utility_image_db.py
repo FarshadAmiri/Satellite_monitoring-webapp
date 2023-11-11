@@ -28,7 +28,9 @@ def store_image(x, y, zoom, start=None, end=None, n_days_before_date=None, date=
 
 def store_image_territory(x_range, y_range, zoom, start=None, end=None, n_days_before_base_date=None, base_date=None,
                           overwrite_repetitious=False, image_store_path=image_store_path):
-
+    
+    start_date, end_date, timestamp = start_end_time_interpreter(start=start, end=end, n_days_before_base_date=n_days_before_base_date,
+                                                    base_date=base_date, return_formatted_only=False)
     if os.path.exists(image_store_path) == False:
         os.mkdir(image_store_path)
     path_z = os.path.join(image_store_path, str(zoom))
@@ -44,8 +46,6 @@ def store_image_territory(x_range, y_range, zoom, start=None, end=None, n_days_b
             if os.path.exists(path_zxy) == False:
                 os.mkdir(path_zxy)
             
-            start_date, end_date, timestamp = start_end_time_interpreter(start=start, end=end, n_days_before_base_date=n_days_before_base_date,
-                                                                base_date=base_date, return_formatted_only=False)
             start_datetime, start_formatted = start_date
             end_datetime, end_formatted = end_date
             image_path = os.path.join(path_zxy, f"{timestamp}.png")

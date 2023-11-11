@@ -8,11 +8,11 @@ class PresetArea(models.Model):
     bbox_lon2 = models.FloatField(null=True, blank=True)
     bbox_lat2 = models.FloatField(null=True, blank=True)
 
-    zoom = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
-    x_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    x_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    y_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    y_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
+    x_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    x_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
 
     tag = models.CharField(max_length=128, primary_key=True,)
     description = models.TextField(max_length=800, null=True, blank=True,)

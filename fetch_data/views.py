@@ -5,8 +5,13 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from .forms import *
 from .utility_image_db import *
+from .serializers import *
 
 
 # @login_required(login_url='users:login', )
@@ -22,26 +27,26 @@ def territory_fetch(request):
             x_max = form.cleaned_data['x_max']
             y_min = form.cleaned_data['y_min']
             y_max = form.cleaned_data['y_max']
-            zoom = form.cleaned_data['zoom']
+            zoom = int(form.cleaned_data['zoom'])
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
             n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
             base_date = form.cleaned_data['base_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
-            x_range = [x_min, x_max]
-            y_range = [y_min, y_max]
-            print("start_date", type(start_date))
-            print("start_date:", start_date)
-            print("end_date", type(end_date))
-            print("end:", end_date)
-            print("n_days_before_base_date", type(n_days_before_base_date))
-            print("base_date", type(base_date))
-            print()
-            print("overwrite_repetitious:", overwrite_repetitious)
-            print()
+            x_range = [int(x_min), int(x_max)]
+            y_range = [int(y_min), int(y_max)]
+            # print("start_date", type(start_date))
+            # print("start_date:", start_date)
+            # print("end_date", type(end_date))
+            # print("end:", end_date)
+            # print("n_days_before_base_date", type(n_days_before_base_date))
+            # print("base_date", type(base_date))
+            # print()
+            # print("overwrite_repetitious:", overwrite_repetitious)
+            # print()
             store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date, base_date=base_date,
                                   overwrite_repetitious=overwrite_repetitious, )
-            print(form.cleaned_data)
+            # print(form.cleaned_data)
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
             return render(request, "fetch_data/error.html", context={'errors': form.errors})
@@ -64,7 +69,7 @@ def territory_fetch(request):
             form = SentinelFetchForm(initial={"x_min": preset_area.x_min, "x_max": preset_area.x_max, "y_min": preset_area.y_min,
                                               "y_max": preset_area.y_max,"zoom": preset_area.zoom, "start_date": start_date, "end_date": end_date,
                                               "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
-                                              "overwrite_repetitious": overwrite_repetitious
+                                              "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area_id
                                                })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
 
@@ -76,3 +81,48 @@ def test(request):
         form = SentinelFetchForm(initial={"x_min": 21390, "x_max": 21400, "y_min": 14030, "y_max": 14035, "zoom": 15, "image_store_path": r"D:\SatteliteImages_db"})
         return render(request, "fetch_data/test.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
     
+
+
+class territory_fetch_APIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        territory_serializer = TerritorySerializer(data=request.data)
+        print(type(territory_serializer))
+        print(territory_serializer)
+        print("111")
+        print("request.data['preset_area']:", request.data['preset_area'])
+        if territory_serializer.is_valid():
+            if request.data['preset_area'] != None:
+                preset_area_obj = PresetArea.objects.get(tag=request.data['preset_area'])
+                # preset_area_obj = request.data['preset_area']
+                x_min, x_max, y_min, y_max, zoom = preset_area_obj.x_min, preset_area_obj.x_max, preset_area_obj.y_min, preset_area_obj.y_max, preset_area_obj.zoom
+            else:
+                x_min = request.data.get('x_min', None)
+                x_max = request.data.get('x_max', None)
+                y_min = request.data.get('y_min', None)
+                y_max = request.data.get('y_max', None)
+                zoom = int(request.data.get('zoom', None))
+            start_date = request.data.get('start_date', None)
+            end_date = request.data.get('end_date', None)
+            n_days_before_base_date = request.data.get('n_days_before_base_date', None)
+            base_date = request.data.get('base_date', None)
+            overwrite_repetitious = request.data.get('overwrite_repetitious', None)
+            overwrite_repetitious = True if overwrite_repetitious in ["True", "true", "1", True] else False
+            x_range = [int(x_min), int(x_max)]
+            y_range = [int(y_min), int(y_max)]
+
+            time_interpreted = start_end_time_interpreter(start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date, base_date=base_date,
+                                                        return_formatted_only=False)
+            start_date, end_date = time_interpreted[0][0], time_interpreted[1][0]
+
+            store_image_territory(x_range, y_range, zoom, start=start_date, end=end_date, overwrite_repetitious=overwrite_repetitious, )
+
+            request_parameters = {"x_min": x_min, "y_min": y_min, "y_max": y_max, "zoom": zoom, "start_date": start_date, "end_date": end_date,
+                                "overwrite_repetitious": overwrite_repetitious}
+
+            return Response(data={"message": "Images stored successfully",
+                         "request_parameters": request_parameters
+                         }, status=200)
+        error_messages = territory_serializer.errors
+        return Response(data={"message": error_messages}, status=400)
