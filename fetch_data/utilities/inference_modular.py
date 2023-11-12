@@ -356,11 +356,11 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                 ships_length.append(length)
 
             if inference_mode == "single_image":
-                result["ships_long_lat"] = ships_coord
+                result["ships_lon_lat"] = ships_coord
                 result["ships_lengths"] = ships_length
                 result["ships_bbox_dimensions"] = ships_bbox_dimensions
             else:
-                result[img[0]]["ships_long_lat"] = ships_coord
+                result[img[0]]["ships_lon_lat"] = ships_coord
                 result[img[0]]["ships_lengths"] = ships_length
                 result[img[0]]["ships_bbox_dimensions"] = ships_bbox_dimensions
         
@@ -372,7 +372,7 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                     annotated_image = sahi_scaled_down_image
                 else:
                     annotated_image = draw_bbox_torchvision(image=sahi_scaled_down_image, bboxes=bboxes_nms, scores=scores_nms,
-                            lengths=result.get("ships_lengths"), ships_coords=result.get("ships_long_lat"),
+                            lengths=result.get("ships_lengths"), ships_coords=result.get("ships_lon_lat"),
                             annotations=annotations, save=save_annotated_image, image_save_name=image_save_name, output_annotated_image=output_annotated_image,
                             font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width)
                 if output_annotated_image:
@@ -382,7 +382,7 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                     annotated_image = sahi_scaled_down_image
                 else:
                     annotated_image = draw_bbox_torchvision(image=sahi_scaled_down_image, bboxes=bboxes_nms, scores=scores_nms,
-                                    lengths=result[img[0]].get("ships_lengths"), ships_coords=result[img[0]].get("ships_long_lat"),
+                                    lengths=result[img[0]].get("ships_lengths"), ships_coords=result[img[0]].get("ships_lon_lat"),
                                     annotations=annotations, save=save_annotated_image, image_save_name=image_save_name, output_annotated_image=output_annotated_image,
                                     font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width)
                 if output_annotated_image:
@@ -392,6 +392,17 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
         txt_dir = path.join(output_dir, 'inference_config.txt')
         with open(txt_dir, 'w') as f:
             f.write(f"""model_or_model_path= {model_or_model_path}\nmodel_input_dim={model_input_dim}\ndevice={device}\n--------------\nconfidence_threshold={confidence_threshold}\nnms_iou_threshold={nms_iou_threshold}\nsahi_overlap_ratio={sahi_overlap_ratio}\nscale_down_factor={scale_down_factor}\nadaptive_scale_down_parameters = {adaptive_scale_down_parameters}\n--------------\nannotation_font={annotation_font}\nannotation_font_size={annotation_font_size}\nannotation_bbox_width={annotation_bbox_width}""")
+    
+    ships_data = dict()
+    for i in range(result["n_obj"]):
+        ships_data[i + 1] = dict()
+        ships_data[i + 1]["lon_lat"] = result["ships_lon_lat"][i]
+        ships_data[i + 1]["length"] = result["ships_lengths"][i]
+        ships_data[i + 1]["confidence"] = result["scores"][i]
+        # ships_data[i]["type"] = result["ships_types"][i]
+        # ships_data[i]["awake"] = result["ships_awake"][i]
+        # ships_data[i]["submarine"] = result["is_submarine"][i]
+    result["ships_data"] = ships_data
 
     del model
     return result

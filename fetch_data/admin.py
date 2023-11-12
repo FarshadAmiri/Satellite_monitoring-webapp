@@ -76,7 +76,7 @@ class SatteliteImageAdmin(admin.ModelAdmin):
         }),
     )
 
-@admin.register(SatteliteImageObject)
-class SatteliteImageObjectAdmin(admin.ModelAdmin):
-    list_display = ('image', 'annotated_image', 'n_total_ships', 'n_navy', 'n_oil_tanker', 'n_cargo')
-    ordering = ['pk']
+# @admin.register(DetectedObject)
+# # class SatteliteImageObjectAdmin(admin.ModelAdmin):
+# #     # list_display = ('image', 'annotated_image', 'n_total_ships', 'n_navy', 'n_oil_tanker', 'n_cargo')
+# #     # ordering = ['pk']

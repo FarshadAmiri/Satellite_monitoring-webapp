@@ -217,3 +217,20 @@ def territory_divider(x_range, y_range, piece_size=70):
             territories_row.append([(x_min, x_max) , (y_min, y_max)])
         territories.append(territories_row)
     return territories
+
+
+def coords_in_a_xyz(lon_lat, xyz):
+    lon, lat = lon_lat
+    x, y, z = xyz
+    lonmin, latmin, lonmax, latmax = xyz2bbox(xyz)
+    if (lon >= lonmin) and (lon <= lonmax) and (lat >= latmin) and (lat <= latmax):
+        return True
+    return False
+
+
+def image_dir_in_image_db(x, y, z, timestamp, base_dir):
+    path_z = os.path.join(base_dir, int(z))
+    path_zx = os.path.join(path_z, int(x))
+    path_zxy = os.path.join(path_zx, int(y))
+    image_path = os.path.join(path_zxy, f"{timestamp}.png")
+    return image_path
