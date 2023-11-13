@@ -112,22 +112,24 @@ class DetectedObject(models.Model):
     confidence = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)])
     length = models.FloatField(null=True, blank=True)
     awake = models.BooleanField(null=True)
-    # ships_coords =  models.CharField(validators=)
-    # ships_lengths = models.CharField(validators=)
-    # ships_scores = models.CharField(validators=)
-    # ships_bbox_h = models.FloatField()
-    # ships_bbox_w = models.FloatField()
-
-    # object_id = models.PositiveIntegerField()
-    # object_type = models.CharField(max_length=20)
-    # object_score = models.FloatField()
-    # object_length = models.FloatField()
-    # object_bbox_h = models.FloatField()
-    # object_bbox_w = models.FloatField()
-    # object_bbox_x = models.FloatField()
-    # object_bbox_y = models.FloatField()
 
     def __str__(self):
         return f'{self.id}'
     
+
+class CoordsMap(models.Model):
+
+    lon_min = models.FloatField()
+    lon_max = models.FloatField()
+    lat_min = models.FloatField()
+    lat_max = models.FloatField()
+
+    x = models.IntegerField()
+    y = models.IntegerField()
+    zoom = models.IntegerField()
+
+    def __str__(self):
+        return f'x: {self.x}, y: {self.y}, zoom: {self.zoom}'
+
+
 

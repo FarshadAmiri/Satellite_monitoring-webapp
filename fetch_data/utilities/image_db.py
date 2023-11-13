@@ -9,7 +9,7 @@ from .tools import start_end_time_interpreter, xyz2bbox, xyz2bbox_territory, coo
 from .inference_modular import ship_detection
 from fetch_data.models import SatteliteImage, DetectedObject, WaterCraft
 
-images_db_path = r"D:\SatteliteImages_db2"
+images_db_path = r"D:\SatteliteImages_db"
 
 def store_image(x, y, zoom, start=None, end=None, n_days_before_date=None, date=None):
     global image_db_pat
@@ -53,10 +53,7 @@ def territory_fetch_inference(x_range, y_range, zoom, start=None, end=None, n_da
             if os.path.exists(path_zxy) == False:
                 os.mkdir(path_zxy)
             
-            # start_datetime, start_formatted = start_date
-            # end_datetime, end_formatted = end_date
             image_path = image_dir_in_image_db(i, j, zoom, timestamp, base_dir=images_db_path)
-            # image_path = os.path.join(path_zxy, f"{timestamp}.png")
             images_meta.append((i, j, image_path))
             if overwrite_repetitious or (os.path.exists(image_path) == False):
                 image, url = sentinel_query(coords=(i, j, zoom), start_formatted=start_formatted, end_formatted=end_formatted, output_img=True, output_url=True)
@@ -109,7 +106,7 @@ def territory_fetch_inference(x_range, y_range, zoom, start=None, end=None, n_da
                     source_img = SatteliteImage.objects.get(image_path=img_path)
                     DetectedObject.objects.update_or_create(pk=pk, image=source_img, x=x, y=y, zoom=zoom, lon=lon, lat=lat, time_from=start_datetime,
                                                             time_to=end_datetime, confidence=confidence, length=length, object_type=object_type,
-                                                            awake=True)
+                                                            awake=awake)
 
 
 
@@ -148,14 +145,9 @@ def deconcat_image(concated_image, x_range, y_range):
     small_images = []
 
     for idy, y in enumerate(range(y_range[0], y_range[1] + 1)):
-        # row_images = []
-
         for idx, x in enumerate(range(x_range[0], x_range[1] + 1)):
             img = concated_image[idy * height: (idy + 1) * height, idx * width: (idx + 1) * width]
             img = Image.fromarray(img.astype('uint8'))
             small_images.append((x, y, img))
-            # row_images.append(img)
-
-        # small_images.append(row_images)
 
     return small_images

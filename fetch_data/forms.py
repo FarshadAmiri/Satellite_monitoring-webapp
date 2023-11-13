@@ -25,8 +25,9 @@ class SentinelFetchForm(forms.Form):
     start_date = forms.DateField(widget=DatePickerInput(), required=False)
     end_date = forms.DateField(widget=DatePickerInput(),  required=False)
     base_date = forms.DateField(widget=DatePickerInput(), required=False)
-    n_days_before_base_date = forms.IntegerField(min_value=0, max_value=365,  required=False)
+    n_days_before_base_date = forms.IntegerField(min_value=0, max_value=365,  required=False, label="Days before base date")
     overwrite_repetitious = forms.BooleanField(required=False)
+    inference = forms.BooleanField(required=False, label="Apply Prediction", initial=True)
 
     def clean_x_min(self):
         x_min = self.cleaned_data['x_min']

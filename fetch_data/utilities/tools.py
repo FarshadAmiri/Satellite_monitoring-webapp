@@ -233,7 +233,19 @@ def image_dir_in_image_db(x, y, z, timestamp, base_dir, annotation_mode=False):
     path_zx = os.path.join(path_z, str(int(x)))
     path_zxy = os.path.join(path_zx, str(int(y)))
     if annotation_mode:
-        image_path = os.path.join(path_zxy, f"{timestamp}_annot.png")
+        image_path = os.path.join(path_zxy, f"{timestamp}_annotated.png")
     else:
         image_path = os.path.join(path_zxy, f"{timestamp}.png")
     return image_path
+
+
+def bbox_xyz_table(x_range, y_range, zoom):
+    from fetch_data.models import CoordsMap
+
+    for i in x_range:
+        for j in y_range:
+            lon_min, lat_min, lon_max, lat_max = xyz2bbox((i, j, zoom))
+            CoordsMap.objects.update_or_create(x=i, y=j, zoom=zoom, lon_min= lon_min, lat_min= lat_min, lon_max= lon_max, lat_max= lat_max)
+    print("Coords mapping added to the database.")
+    return
+    

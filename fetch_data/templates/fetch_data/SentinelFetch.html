@@ -17,28 +17,28 @@
    {% else %}
    <br>
    <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;">
-       <h6>Username: {{ user.username }}</h6> 
-       <h6> Email: {{ user.email }}</h6>
+       <h6><strong>Username:</strong> {{ user.username }}</h6> 
+       <h6><strong>Email:</strong> {{ user.email }}</h6>
        <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
        <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
    {% endif %}
    </div>
    <br>
    <div style="background-color: #e1f2d0; padding: 20px; border-radius: 10px;">
-   <h2 style="font-family: 'Helvetica', serif;">Fetch images from Sentinel-hub</h2>
+   <h2 style="font-family: 'Helvetica', serif, font-weight: bold;">Fetch images from Sentinel-hub</h2>
    {{ form.media }}
    <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
        {% csrf_token %}        
        {% for field in form %}
            {% if field.name == "preset_area" %}
                <div class="form-group mx-sm-3 mb-2">
-               <label>Preset area</label>
+               <label style="font-weight: bold">Preset area</label>
                {{ field }}
                <button type="submit" class="btn btn-primary" name="fill_coords" style="color" >Fill coordinations</button>
                </div>
            {% else %}
            <div class="form-group mx-sm-3 mb-2">
-           <label> {{ field.name }}</label>
+           <label style="font-weight: bold;"> {{ field.label }}</label>
            {{ field }}
            </div>
        {% endif %}

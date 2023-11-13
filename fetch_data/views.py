@@ -19,7 +19,7 @@ from .serializers import *
 # @login_required(login_url='users:login', )
 def territory_fetch(request):
     if request.method == 'GET':
-        form = SentinelFetchForm()
+        form = SentinelFetchForm(initial={"inference": True})
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
 
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
