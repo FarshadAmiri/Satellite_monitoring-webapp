@@ -228,9 +228,12 @@ def coords_in_a_xyz(lon_lat, xyz):
     return False
 
 
-def image_dir_in_image_db(x, y, z, timestamp, base_dir):
-    path_z = os.path.join(base_dir, int(z))
-    path_zx = os.path.join(path_z, int(x))
-    path_zxy = os.path.join(path_zx, int(y))
-    image_path = os.path.join(path_zxy, f"{timestamp}.png")
+def image_dir_in_image_db(x, y, z, timestamp, base_dir, annotation_mode=False):
+    path_z = os.path.join(base_dir, str(int(z)))
+    path_zx = os.path.join(path_z, str(int(x)))
+    path_zxy = os.path.join(path_zx, str(int(y)))
+    if annotation_mode:
+        image_path = os.path.join(path_zxy, f"{timestamp}_annot.png")
+    else:
+        image_path = os.path.join(path_zxy, f"{timestamp}.png")
     return image_path

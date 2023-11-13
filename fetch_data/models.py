@@ -46,11 +46,11 @@ class PresetArea(models.Model):
             return "-"
 
 class WaterCraft(models.Model):
-    watercraft_type = models.CharField(max_length=64)
+    watercraft_type = models.CharField(max_length=64, default="Shipcraft")
     name = models.CharField(primary_key=True, max_length=64)
-    length_min = models.FloatField()
-    length_max = models.FloatField()
-    color = models.CharField(max_length=16)
+    length_min = models.FloatField(null=True)
+    length_max = models.FloatField(null=True)
+    color = models.CharField(null=True, max_length=16)
 
     def __str__(self):
         return f'{self.name}'
@@ -97,7 +97,7 @@ class SatteliteImage(models.Model):
 
 
 class DetectedObject(models.Model):
-    pk = models.CharField(primary_key=True, max_length=128)
+    id = models.CharField(primary_key=True, max_length=128)
     image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
     
     lon = models.FloatField()

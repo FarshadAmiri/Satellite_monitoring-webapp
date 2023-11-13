@@ -45,7 +45,7 @@ def territory_fetch(request):
                     x_range = sub_territory[0]
                     y_range = sub_territory[1]
                     territory_fetch_inference(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date,
-                                              base_date=base_date, overwrite_repetitious=overwrite_repetitious, )
+                                              base_date=base_date, overwrite_repetitious=overwrite_repetitious, inference=True)
             # print(form.cleaned_data)
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
