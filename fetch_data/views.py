@@ -39,11 +39,12 @@ def territory_fetch(request):
             y_range = [int(y_min), int(y_max)]
 
             territories = territory_divider(x_range, y_range, piece_size=70)
-            print(territories)
+            # print(territories)
             for territory in territories:
                 for sub_territory in territory:
                     x_range = sub_territory[0]
                     y_range = sub_territory[1]
+                    print(sub_territory)
                     territory_fetch_inference(x_range, y_range, zoom, start=start_date, end=end_date, n_days_before_base_date=n_days_before_base_date,
                                               base_date=base_date, overwrite_repetitious=overwrite_repetitious, inference=True)
             # print(form.cleaned_data)

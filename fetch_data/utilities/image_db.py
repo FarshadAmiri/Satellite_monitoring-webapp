@@ -85,9 +85,9 @@ def territory_fetch_inference(x_range, y_range, zoom, start=None, end=None, n_da
         for x, y, img in deconcated_annotated_images:
             annot_img_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path, annotation_mode=True)
             img.save(annot_img_path)
-            original_image = SatteliteImage.objects.get(image_path=image_path)
-            original_image.annotation_image_path = annot_img_path
-            original_image.save()
+            image_obj = SatteliteImage.objects.get(image_path=image_path)
+            image_obj.annotated_image_path = annot_img_path
+            image_obj.save()
 
 
         for obj, data in ships_data.items():
@@ -102,14 +102,14 @@ def territory_fetch_inference(x_range, y_range, zoom, start=None, end=None, n_da
                     # object_type = WaterCraft.objects.get(name=watercraft_name)
 
                     object_type = WaterCraft.objects.get(name="Unknown")   # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    awake = "Unknown"                                      # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    awake = True                                     # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                     pk = f"x{x}_y{y}_z{zoom}_({timestamp})_{obj}"
-                    image_path = image_dir_in_image_db(x, y, zoom, timestamp, obj)
+                    image_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path)
                     source_img = SatteliteImage.objects.get(image_path=img_path)
                     DetectedObject.objects.update_or_create(pk=pk, image=source_img, x=x, y=y, zoom=zoom, lon=lon, lat=lat, time_from=start_datetime,
                                                             time_to=end_datetime, confidence=confidence, length=length, object_type=object_type,
-                                                            awake=awake)
+                                                            awake=True)
 
 
 
