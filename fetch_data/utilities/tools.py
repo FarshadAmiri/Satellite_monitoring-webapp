@@ -242,8 +242,8 @@ def image_dir_in_image_db(x, y, z, timestamp, base_dir, annotation_mode=False):
 def bbox_xyz_table(x_range, y_range, zoom):
     from fetch_data.models import CoordsMap
 
-    for i in (x_range[0], x_range[1] + 1):
-        for j in (y_range[0], y_range[1] + 1):
+    for i in range(x_range[0], x_range[1] + 1):
+        for j in range(y_range[0], y_range[1] + 1):
             lon_min, lat_min, lon_max, lat_max = xyz2bbox((i, j, zoom))
             CoordsMap.objects.update_or_create(x=i, y=j, zoom=zoom, lon_min= lon_min, lat_min= lat_min, lon_max= lon_max, lat_max= lat_max)
     print("Coords mapping added to the database.")
