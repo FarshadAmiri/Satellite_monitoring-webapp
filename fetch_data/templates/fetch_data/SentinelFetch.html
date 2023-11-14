@@ -11,42 +11,184 @@
 <body>
    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}">
    </script>
-   <div class="form-group mx-sm-2 mb-2">
-   {% if not request.user.is_authenticated %}
-       <a href="{% url 'users:login' %}">Log in/Sign up</a>
-   {% else %}
-   <br>
-   <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;">
-       <h6><strong>Username:</strong> {{ user.username }}</h6> 
-       <h6><strong>Email:</strong> {{ user.email }}</h6>
-       <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
-       <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
-   {% endif %}
-   </div>
-   <br>
-   <div style="background-color: #e1f2d0; padding: 20px; border-radius: 10px;">
-   <h2 style="font-family: 'Helvetica', serif, font-weight: bold;">Fetch images from Sentinel-hub</h2>
-   {{ form.media }}
+
+   <div class="container">
+        <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
+        <div class="col-9">
+            <h3 style="color: #000000;">Fetch images from Sentinel-hub</h3>
+        </div>
+            <div class="col-3">
+                {% if not request.user.is_authenticated %}
+                <button type="button" class="btn btn-primary" name="login" value="login">
+                <a href="{% url 'users:login' %}" style="color: white;">Login</a>
+                </button>
+                {% else %}
+                {% comment %} <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;"> {% endcomment %}
+                    <h6><strong>Username:</strong> {{ user.username }}</h6> 
+                    <h6><strong>Email:</strong> {{ user.email }}</h6>
+                    <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
+                    <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
+                {% endif %}
+        </div>
+        </div>
+
+    {{ form.media }}
    <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
-       {% csrf_token %}        
-       {% for field in form %}
-           {% if field.name == "preset_area" %}
-               <div class="form-group mx-sm-3 mb-2">
-               <label style="font-weight: bold">Preset area</label>
-               {{ field }}
-               <button type="submit" class="btn btn-primary" name="fill_coords" style="color" >Fill coordinations</button>
-               </div>
-           {% else %}
-           <div class="form-group mx-sm-3 mb-2">
-           <label style="font-weight: bold;"> {{ field.label }}</label>
-           {{ field }}
-           </div>
-       {% endif %}
-       {% endfor %}
+    {% csrf_token %}
+    <div class="row" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px">
+        <div class="col-6" style="background-color: #ECFFE0; padding: 50px; border-radius: 25px;">
+        <h2 style="font-weight: bold; color: #943BBE">Coordinations</h3>
+        <br>
+            <div>
+            <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
+            <select id="coordinate_type" name="coordinate_type">
+            <option value="xy" style="font-weight: bold">x, y</option>
+            <option value="lonlat" style="font-weight: bold">lon, lat</option>
+            </select>
+            </div>
+        <br>
+            <div id="zoom_field">
+                <label for="zoom" style="font-weight: bold">Zoom:</label>
+                {{ form.zoom }}
+            </div>
+        <br>
+            <div id="xy_fields">
+                <div class="row">
+                    <div class ="col-3">
+                        <label for="x_min" style="font-weight: bold">X min</label>
+                        {{ form.x_min }}
+                    </div>
+                    <div class ="col-3">
+                        <label for="x_max" style="font-weight: bold">X max</label>
+                        {{ form.x_max }}
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class ="col-3">
+                        <label for="y_min" style="font-weight: bold">Y min</label>
+                        {{ form.y_min }}
+                    </div>
+                    <div class ="col-3">
+                        <label for="y_max" style="font-weight: bold">Y max</label>
+                        {{ form.y_max }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="lonlat_fields" style="display:none;">
+                <div class="row">
+                    <div class ="col-3">
+                        <label for="lon_min" style="font-weight: bold">Lon min:</label>
+                        {{ form.lon_min }}
+                    </div>
+                    <div class ="col-3">
+                        <label for="lon_max" style="font-weight: bold">Lon max:</label>
+                        {{ form.lon_max }}
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class ="col-3">
+                        <label for="lat_min" style="font-weight: bold">Lat min:</label>
+                        {{ form.lat_min }}
+                    </div>
+                    <div class ="col-3">
+                        <label for="lat_max" style="font-weight: bold">Lat max:</label>
+                        {{ form.lat_max }}      
+                    </div>
+                </div>
+            </div>
+        <br>
+        <br>
+            <div id="preset_area">
+                <div class="row">
+                    <div class="col-6">
+                        <label for="preset_area" style="font-weight: bold">Preset area: </label>
+                        {{ form.preset_area }}
+                    </div>
+                    <div class="col-6">
+                        <button type="submit" class="btn btn-dark" name="fill_coords" style="color" >Fill coordinations</button>
+                    </div>
+                </div>
+            </div>
+        </div> 
+            <div class="col-6"  style="background-color: #FEFFE0; padding: 45px; border-radius: 25px;">
+            <h2 style="font-weight: bold; color: #943BBE">Time interval</h3>
+            <br>
+                <div>
+                    <label for="Date_type" style="font-weight: bold">Choose Date input Type:</label>
+                    <select id="Date_type" name="Date_type">
+                        <option value="start_end" style="font-weight: bold">Start, end dates</option>
+                        <option value="days_before" style="font-weight: bold">"N" Days before a base date</option>
+                    </select>
+                </div>
+
+                <div id="Date_fields_start_end">
+                <br>
+                    <label for="start_date" style="font-weight: bold">Start_date:</label>
+                        {{ form.start_date }}
+                        <br>
+                    <label for="end_date" style="font-weight: bold">End_date:</label>
+                        {{ form.end_date }}
+
+                </div>
+
+                <div id="Date_fields_ndays_before" style="display:none;">
+                <br>
+                    <label for="base_date" style="font-weight: bold">Base_date:</label>
+                        {{ form.base_date }}
+                    <br>
+                    <label for="n_days_before_base_date" style="font-weight: bold">How many days before base date?</label>
+                        {{ form.n_days_before_base_date }}
+                </div>
+            </div>
+        <br>
        <div class="form-group mx-sm-3 mb-2">
+       <br>
+        <div id="other_parameters">
+            <div class="row">
+                <div class="col-4">
+                    <label for="overwrite_repetitious" style="font-weight: bold">Overwrite existing images:</label>
+                        {{ form.overwrite_repetitious }}
+                </div>
+                <div class="col-4">
+                <label for="inference" style="font-weight: bold">Apply watercraft detection</label>
+                    {{ form.inference }}
+                </div>
+            </div>
+        </div>
+       <br>
        <button type="submit" class="btn btn-primary" name="fetch">Get images</button>
        </div>
        </div>
    </form>
+<script>
+  document.getElementById("coordinate_type").addEventListener("change", function() {
+    var xyFields = document.getElementById("xy_fields");
+    var lonlatFields = document.getElementById("lonlat_fields");
+
+    if (this.value === "xy") {
+      xyFields.style.display = "block";
+      lonlatFields.style.display = "none";
+    } else if (this.value === "lonlat") {
+      xyFields.style.display = "none";
+      lonlatFields.style.display = "block";
+    }
+  });
+
+  document.getElementById("Date_type").addEventListener("change", function() {
+    var start_endFields = document.getElementById("Date_fields_start_end");
+    var ndaysFields = document.getElementById("Date_fields_ndays_before");
+
+    if (this.value === "start_end") {
+      start_endFields.style.display = "block";
+      ndaysFields.style.display = "none";
+    } else if (this.value === "days_before") {
+      start_endFields.style.display = "none";
+      ndaysFields.style.display = "block";
+    }
+  });
+</script>
 </body>
 </html>

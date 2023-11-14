@@ -242,10 +242,61 @@ def image_dir_in_image_db(x, y, z, timestamp, base_dir, annotation_mode=False):
 def bbox_xyz_table(x_range, y_range, zoom):
     from fetch_data.models import CoordsMap
 
-    for i in range(x_range[0], x_range[1] + 1):
-        for j in range(y_range[0], y_range[1] + 1):
+    for i in range(x_range[0], x_range[1] + 1, 300):
+        for j in range(y_range[0], y_range[1] + 1, 300):
             lon_min, lat_min, lon_max, lat_max = xyz2bbox((i, j, zoom))
             CoordsMap.objects.update_or_create(x=i, y=j, zoom=zoom, lon_min= lon_min, lat_min= lat_min, lon_max= lon_max, lat_max= lat_max)
     print("Coords mapping added to the database.")
     return
     
+
+# def coords_finder(coords, zoom):
+#     from fetch_data.models import CoordsMap
+    
+#     lon_1, lat_1, lon_2, lat_2= coords
+#     coords_map_x_asc = CoordsMap.objects.all().order_by('x')
+#     if coords_map_x_asc[0].lon_min >= lon_1:
+#         raise AssertionError(f"CoordsMap table is not completed in the given range and not qulaified to retrieve the coordinates. \nfill the database using bbox_xyz_table function for Xs lower than {coords_map_x_asc[0]} and retry this function.")
+#     opt_x , opt_y = None, None
+#     for idx, instance in enumerate(coords_map_x_asc):
+#         if instance.lon_min > lon_1:
+#             opt_x = coords_map_x_asc[idx - 1].x
+#             while CoordsMap.objects.get(x=opt_x).lon_min
+
+
+
+def coords_2_xyz_newton(coords, zoom):
+    from scipy import optimize
+    lon1, lat1, lon2, lat2 = coords
+    
+    def x2lon_min(x):
+        nonlocal zoom, lon1
+        lon_min = x / math.pow(2.0, zoom) * 360.0 - 180
+        return lon_min - lon1
+
+    def x2lon_max(x):
+        nonlocal zoom, lon2
+        lon_max = (x+1) / math.pow(2.0, zoom) * 360.0 - 180
+        return lon_max - lon2
+
+
+    def y2lat_min(y):
+        nonlocal zoom, lat1
+        n2 = math.pi - (2.0 * math.pi * (y+1)) / math.pow(2.0, zoom)
+        lat_min = math.atan(math.sinh(n2)) * 180 / math.pi
+        return lat_min - lat1
+
+
+    def y2lat_max(y):
+        nonlocal zoom, lat2
+        n1 = math.pi - (2.0 * math.pi * y) / math.pow(2.0, zoom)
+        lat_max = math.atan(math.sinh(n1)) * 180 / math.pi
+        return lat_max - lat2
+    
+    x_min = optimize.newton(x2lon_min, 15000)
+    x_max = optimize.newton(x2lon_max, 15000)
+    y_min = optimize.newton(y2lat_min, 15000)
+    y_max = optimize.newton(y2lat_max, 15000)
+    x_min, x_max, y_min, y_max = list(map(lambda x: int(round(x,0)), (x_min, x_max, y_min, y_max)))
+    x_range, y_range = (x_min, x_max), (y_min, y_max)
+    return (x_range, y_range, zoom)
