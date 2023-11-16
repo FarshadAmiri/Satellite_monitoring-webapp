@@ -21,7 +21,7 @@ class SentinelFetchForm(forms.Form):
     x_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
     y_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
     y_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    zoom = forms.IntegerField(min_value=0, max_value=50, required=False)
+    zoom = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
     lon_min = forms.FloatField(min_value=-180, max_value=180, required=False)
     lon_max = forms.FloatField(min_value=-180, max_value=180, required=False)
     lat_min = forms.FloatField(min_value=-90, max_value=90, required=False)
@@ -92,13 +92,16 @@ class SentinelFetchForm(forms.Form):
                 raise forms.ValidationError('Invalid n_days_before_base_date value')
         return n_days_before_base_date
 
-    # def clean_base_date(self):
-    #     base_date = self.cleaned_data['base_date']
-    #     if base_date < datetime.datetime.now():
-    #         raise forms.ValidationError('Base date cannot be in the past')
-    #     return base_date
 
-    # def clean_overwrite_repetitious(self):
-    #     overwrite_repetitious = self.cleaned_data['overwrite_repetitious']
-    #     if overwrite_repetitious not in ['true', 'false']:
-    #         raise forms.ValidationError('Invalid overwrite_repetitious')
+
+class ConvertForm(forms.Form):
+        
+    x_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    zoom = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
+    lon_min = forms.FloatField(min_value=-180, max_value=180, required=False)
+    lon_max = forms.FloatField(min_value=-180, max_value=180, required=False)
+    lat_min = forms.FloatField(min_value=-90, max_value=90, required=False)
+    lat_max = forms.FloatField(min_value=-90, max_value=90, required=False)

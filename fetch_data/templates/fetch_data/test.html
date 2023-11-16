@@ -1,50 +1,93 @@
-<form method="POST">
-  {% csrf_token %}
-  
-  <div>
-    <label for="coordinate_type">Choose Coordinate Type:</label>
-    <select id="coordinate_type" name="coordinate_type">
-      <option value="xy">x, y</option>
-      <option value="lonlat">lon, lat</option>
-    </select>
-  </div>
+{% load static %}
 
-  <div id="xy_fields">
-    <label for="x_min">x_min:</label>
-    {{ form.x_min }}
-    <label for="x_max">x_max:</label>
-    {{ form.x_max }}
-    <label for="y_min">y_min:</label>
-    {{ form.y_min }}
-    <label for="y_max">y_max:</label>
-    {{ form.y_max }}
-  </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Fetch data</title>
+   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+</head>
+<body>
+   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}">
+   </script>
+   <!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" integrity="sha512-6m6I4e2S3qgGeC8b4hPjfXoo9S41qHOCvh8Xh4ICG+qfTnqo5qAN8gQzJLgALFvEd8tqJ6Y3CKu6Gn8BZdLgww==" crossorigin=""/>
 
-  <div id="lonlat_fields" style="display:none;">
-    <label for="lon_min">lon_min:</label>
-    {{ form.lon_min }}
-    <label for="lon_max">lon_max:</label>
-    {{ form.lon_max }}
-    <label for="lat_min">lat_min:</label>
-    {{ form.lat_min }}
-    <label for="lat_max">lat_max:</label>
-    {{ form.lat_max }}
-  </div>
-
-  <input type="submit" value="Submit">
-</form>
+<!-- Leaflet JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js" integrity="sha512-wW5h/4iiojy6Vm+g4C6hZbPz2H3g1il3P9HfQa0ZRJc4A4tE3/6UmcuEHRfifn9T4hYcVnN0yVG1b2zIb6jK8Q==" crossorigin=""></script>
+<div id="map" style="height: 400px;"></div>
 
 <script>
-  document.getElementById("coordinate_type").addEventListener("change", function() {
-    var xyFields = document.getElementById("xy_fields");
-    var lonlatFields = document.getElementById("lonlat_fields");
+  // Initialize the map
+  var map = L.map('map').setView([0, 0], 2);
 
-    if (this.value === "xy") {
-      xyFields.style.display = "block";
-      lonlatFields.style.display = "none";
-    } else if (this.value === "lonlat") {
-      xyFields.style.display = "none";
-      lonlatFields.style.display = "block";
+  // Add a tile layer to the map (replace 'path/to/your/tiles/{z}/{x}/{y}.png' with your own tile layer URL)
+  L.tileLayer('path/to/your/tiles/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+    maxZoom: 18,
+  }).addTo(map);
+
+  // Initialize the rectangle drawn by the user
+  var drawnRectangle;
+
+  // Listen for rectangle creation
+  map.on('draw:created', function(event) {
+    var layer = event.layer;
+
+    // Remove any previously drawn rectangle
+    if (drawnRectangle) {
+      map.removeLayer(drawnRectangle);
     }
+
+    // Add the newly drawn rectangle to the map
+    drawnRectangle = layer;
+    drawnRectangle.addTo(map);
+
+    // Get the bounds of the rectangle
+    var bounds = layer.getBounds();
+
+    // Fill in the form fields with the rectangle coordinates
+    document.getElementById('lon_min').value = bounds.getWest();
+    document.getElementById('lat_min').value = bounds.getSouth();
+    document.getElementById('lon_max').value = bounds.getEast();
+    document.getElementById('lat_max').value = bounds.getNorth();
   });
+
+  // Enable rectangle drawing on the map
+  var drawnItems = new L.FeatureGroup();
+  map.addLayer(drawnItems);
+  var drawControl = new L.Control.Draw({
+    draw: {
+      rectangle: true,
+      polygon: false,
+      circle: false,
+      marker: false,
+      circlemarker: false,
+    },
+    edit: {
+      featureGroup: drawnItems,
+      remove: true,
+    },
+  });
+  map.addControl(drawControl);
 </script>
+<form>
+  <label for="lon_min">Longitude Min:</label>
+  <input type="text" id="lon_min" name="lon_min" readonly>
+
+  <label for="lat_min">Latitude Min:</label>
+  <input type="text" id="lat_min" name="lat_min" readonly>
+
+  <label for="lon_max">Longitude Max:</label>
+  <input type="text" id="lon_max" name="lon_max" readonly>
+
+  <label for="lat_max">Latitude Max:</label>
+  <input type="text" id="lat_max" name="lat_max" readonly>
+</form>
+
+
+<script>
+</script>
+</body>
+</html>

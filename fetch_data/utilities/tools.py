@@ -5,7 +5,7 @@ import datetime
 from PIL import Image
 import numpy as np
 import requests
-import os
+import os, logging
 from io import BytesIO
 
 def haversine_distance(lon1, lat1, lon2, lat2):
@@ -142,7 +142,7 @@ def xyz2bbox_territory(x_range, y_range, zoom):
     return coords
 
 
-def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=None, base_date=None, return_formatted_only=True):
+def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=None, base_date=None):
     if n_days_before_base_date != None:
         try:
             n_days_before_base_date = int(n_days_before_base_date)
@@ -183,9 +183,13 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
     end_formatted = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%SZ")
     timestamp = f"{start_formatted.split('T')[0]}_{end_formatted.split('T')[0]}"
     
-    if return_formatted_only:
-        return [start_formatted, end_formatted, timestamp]
-    return [(start, start_formatted), (end, end_formatted), timestamp]
+    result ={"start_date": start,
+             "end_date": end,
+             "start_formatted": start_formatted,
+             "end_formatted": end_formatted,
+             "timestamp": timestamp}
+    
+    return result
 
 
 
@@ -250,25 +254,13 @@ def bbox_xyz_table(x_range, y_range, zoom):
     return
     
 
-# def coords_finder(coords, zoom):
-#     from fetch_data.models import CoordsMap
-    
-#     lon_1, lat_1, lon_2, lat_2= coords
-#     coords_map_x_asc = CoordsMap.objects.all().order_by('x')
-#     if coords_map_x_asc[0].lon_min >= lon_1:
-#         raise AssertionError(f"CoordsMap table is not completed in the given range and not qulaified to retrieve the coordinates. \nfill the database using bbox_xyz_table function for Xs lower than {coords_map_x_asc[0]} and retry this function.")
-#     opt_x , opt_y = None, None
-#     for idx, instance in enumerate(coords_map_x_asc):
-#         if instance.lon_min > lon_1:
-#             opt_x = coords_map_x_asc[idx - 1].x
-#             while CoordsMap.objects.get(x=opt_x).lon_min
-
-
-
 def coords_2_xyz_newton(coords, zoom):
     from scipy import optimize
+    import math
+
     lon1, lat1, lon2, lat2 = coords
-    
+    xy0_samples = [i*1000 for i in range(1, 26, 3)]
+
     def x2lon_min(x):
         nonlocal zoom, lon1
         lon_min = x / math.pow(2.0, zoom) * 360.0 - 180
@@ -293,10 +285,26 @@ def coords_2_xyz_newton(coords, zoom):
         lat_max = math.atan(math.sinh(n1)) * 180 / math.pi
         return lat_max - lat2
     
-    x_min = optimize.newton(x2lon_min, 15000)
-    x_max = optimize.newton(x2lon_max, 15000)
-    y_min = optimize.newton(y2lat_min, 15000)
-    y_max = optimize.newton(y2lat_max, 15000)
-    x_min, x_max, y_min, y_max = list(map(lambda x: int(round(x,0)), (x_min, x_max, y_min, y_max)))
-    x_range, y_range = (x_min, x_max), (y_min, y_max)
-    return (x_range, y_range, zoom)
+    def newton_raphson(x2lon_min, x2lon_max, y2lat_min, y2lat_max, xy0):
+        try:
+            x_min0, x_max0, y_min0, y_max0 = [xy0] * 4
+            x_min = optimize.newton(x2lon_min, x_min0)
+            x_max = optimize.newton(x2lon_max, x_max0)
+            y_min = optimize.newton(y2lat_min, y_min0)
+            y_max = optimize.newton(y2lat_max, y_max0)
+            x_min, x_max, y_min, y_max = list(map(lambda x: int(round(x,0)), (x_min, x_max, y_min, y_max)))
+            x_range, y_range = (x_min, x_max), (y_min, y_max)
+            return (x_range, y_range, zoom)
+        except:
+            return False
+    
+    logging.info(f'Newton-Raphson method is used to find the "xy" format of the coordinates.')
+    result = False
+    while result == False:
+        for xy0 in xy0_samples:
+            result = newton_raphson(x2lon_min, x2lon_max, y2lat_min, y2lat_max, xy0)
+            if result is not False:
+                break
+    
+    logging.info(f'coordinations: [{lon1}, {lat1}, {lon2}, {lat2}]\nx_range, y_range, zoom: {result}')
+    return result

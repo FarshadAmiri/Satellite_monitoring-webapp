@@ -345,6 +345,12 @@ def draw_bbox_torchvision(image, bboxes, scores, lengths=None,ships_coords=None,
     # w, h = image.size
     # thick = int((h + w) // 512)
     # font_size = int((h + w) // 64)
+    # if font_size == 12:
+    #     n_space = 7
+    # elif font_size == 10:
+    #     n_space = 10
+    
+    n_space = int(80 / font_size ) + 2
 
     colors = [(255, 255, 255), (150, 255, 150), (255, 130, 0), (240, 240, 0), (200, 70, 255),  (0, 255, 0), (200, 255, 180), 
                (40, 210, 150), (140, 250, 15), (230, 255, 100), (200, 230, 255), (15, 255, 230), (255, 150, 0), (255, 255, 255),
@@ -361,7 +367,7 @@ def draw_bbox_torchvision(image, bboxes, scores, lengths=None,ships_coords=None,
     bboxes = torch.from_numpy(bboxes)
 
     # Generating labels
-    labels = ["" for idx in range(len(scores))]
+    labels = [" "*n_space for idx in range(len(scores))]
     if "score" in annotations:
         labels = [f"{labels[idx]}{scores[idx]:.2f}  "  for idx in range(len(labels))]
     if "length" in annotations:
@@ -370,8 +376,8 @@ def draw_bbox_torchvision(image, bboxes, scores, lengths=None,ships_coords=None,
     if "coord" in annotations:
         if ships_coords !=None:
             ships_coords = tuple(map(lambda x: (round(x[0], 4), round(x[1], 4)), ships_coords))
-            labels = [f"{labels[idx]}\nLon: {ships_coords[idx][0]}" for idx in range(len(labels))]
-            labels = [f"{labels[idx]}\nLat: {ships_coords[idx][1]}" for idx in range(len(labels))]
+            labels = [f"{labels[idx]}\n{' '*n_space}Lon: {ships_coords[idx][0]}" for idx in range(len(labels))]
+            labels = [f"{labels[idx]}\n{' '*n_space}Lat: {ships_coords[idx][1]}" for idx in range(len(labels))]
 
     # draw bounding boxes with fill color
     try:

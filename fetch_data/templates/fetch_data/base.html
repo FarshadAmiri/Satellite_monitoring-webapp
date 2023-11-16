@@ -1,0 +1,30 @@
+{% load static %}
+
+<html>
+  <head>
+  </head>
+  <body>
+  <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+  <div class="container">
+        <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
+        <div class="col-9 d-flex align-items-center">
+            <h3 style="color: #000000; font-weight: bold; font-size: 36px">Fetch images from Sentinel-hub</h3>
+        </div>
+            <div class="col-3">
+                {% if not request.user.is_authenticated %}
+                <button type="button" class="btn btn-primary" name="login" value="login">
+                <a href="{% url 'users:login' %}" style="color: white;">Login</a>
+                </button>
+                {% else %}
+                {% comment %} <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;"> {% endcomment %}
+                    <h6><strong>Username:</strong> {{ user.username }}</h6> 
+                    <h6><strong>Email:</strong> {{ user.email }}</h6>
+                    <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
+                    <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
+                {% endif %}
+        </div>
+        </div>
+        {% block content %}
+        {% endblock %}
+   </body>
+</html>

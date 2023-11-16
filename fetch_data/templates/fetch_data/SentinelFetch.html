@@ -9,13 +9,12 @@
    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
 </head>
 <body>
-   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}">
-   </script>
+   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
 
    <div class="container">
         <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
-        <div class="col-9">
-            <h3 style="color: #000000;">Fetch images from Sentinel-hub</h3>
+        <div class="col-9 d-flex align-items-center">
+            <h3 style="color: #000000; font-weight: bold; font-size: 36px">Fetch images from Sentinel-hub</h3>
         </div>
             <div class="col-3">
                 {% if not request.user.is_authenticated %}
@@ -42,8 +41,8 @@
             <div>
             <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
             <select id="coordinate_type" name="coordinate_type">
-            <option value="xy" style="font-weight: bold">x, y</option>
-            <option value="lonlat" style="font-weight: bold">lon, lat</option>
+            <option value="xy">x, y</option>
+            <option value="lonlat">Lon, Lat</option>
             </select>
             </div>
         <br>
@@ -108,7 +107,7 @@
                         {{ form.preset_area }}
                     </div>
                     <div class="col-6">
-                        <button type="submit" class="btn btn-dark" name="fill_coords" style="color" >Fill coordinations</button>
+                        <button type="submit" class="btn btn-dark" name="fill_coords" style="color" >Fill coordinates</button>
                     </div>
                 </div>
             </div>
@@ -117,10 +116,10 @@
             <h2 style="font-weight: bold; color: #943BBE">Time interval</h3>
             <br>
                 <div>
-                    <label for="Date_type" style="font-weight: bold">Choose Date input Type:</label>
-                    <select id="Date_type" name="Date_type">
-                        <option value="start_end" style="font-weight: bold">Start, end dates</option>
-                        <option value="days_before" style="font-weight: bold">"N" Days before a base date</option>
+                    <label for="date_type" style="font-weight: bold">Choose Date input Type:</label>
+                    <select id="date_type" name="date_type">
+                        <option value="start_end">Start, end dates</option>
+                        <option value="days_before">"N" Days before a base date</option>
                     </select>
                 </div>
 
@@ -153,8 +152,14 @@
                         {{ form.overwrite_repetitious }}
                 </div>
                 <div class="col-4">
-                <label for="inference" style="font-weight: bold">Apply watercraft detection</label>
-                    {{ form.inference }}
+                    <label for="inference" style="font-weight: bold">Apply watercraft detection</label>
+                        {{ form.inference }}
+                </div>
+                <div class="col-4">
+                    <div class="form-check form-check-inline">
+                        <label class="form-check-label" for="save_concated" style="font-weight: bold">Save concatenated inference</label>
+                        <input class="form-check-input" type="checkbox" id="save_concated" name="save_concated" value="True" checked>
+                    </div>  
                 </div>
             </div>
         </div>
@@ -163,32 +168,6 @@
        </div>
        </div>
    </form>
-<script>
-  document.getElementById("coordinate_type").addEventListener("change", function() {
-    var xyFields = document.getElementById("xy_fields");
-    var lonlatFields = document.getElementById("lonlat_fields");
-
-    if (this.value === "xy") {
-      xyFields.style.display = "block";
-      lonlatFields.style.display = "none";
-    } else if (this.value === "lonlat") {
-      xyFields.style.display = "none";
-      lonlatFields.style.display = "block";
-    }
-  });
-
-  document.getElementById("Date_type").addEventListener("change", function() {
-    var start_endFields = document.getElementById("Date_fields_start_end");
-    var ndaysFields = document.getElementById("Date_fields_ndays_before");
-
-    if (this.value === "start_end") {
-      start_endFields.style.display = "block";
-      ndaysFields.style.display = "none";
-    } else if (this.value === "days_before") {
-      start_endFields.style.display = "none";
-      ndaysFields.style.display = "block";
-    }
-  });
-</script>
+<script type="text/javascript" src="{% static 'js/fetch_data/sentinelfetch.js' %}"></script>
 </body>
 </html>
