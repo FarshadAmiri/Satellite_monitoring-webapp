@@ -7,30 +7,53 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>Fetch data</title>
    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+   <script src="{% static 'js/bootstrap.min.js' %}"></script>
 </head>
 <body>
-   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light" style="background-color: #8d6f9e;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Satellite Fetch</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Link
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
+                            <li><a class="dropdown-item" href="#">Action</a></li>
+                            <li><a class="dropdown-item" href="#">Another action</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        </ul>
+                        </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+        {% comment %} <form class="container-fluid d-flex justify-content-between"> {% endcomment %}
+            {% comment %} <div>
+                <a href="{% url 'users:logout' %}" style="font-weight: bold; font-size: 18px;" class="btn btn-outline-info" type="button">Tools</a>
+            </div>
+            <div>
+                    {% if not request.user.is_authenticated %}
+                    <a href="{% url 'users:login' %}" style="font-weight: bold; font-size: 18px" class="btn btn-success" type="button">Log in</a>
+                    {% else %}
+                    <a href="{% url 'users:profile' %}" style="font-weight: bold; font-size: 18px" class="btn btn-primary" type="button">@{{user.username}}</a>
+                    {% endif %}
+                    <a href="{% url 'users:logout' %}" style="font-weight: bold; font-size: 18px;" class="btn btn-danger" type="button">Log out</a>
+            </div>
+        </form>
+    </nav> {% endcomment %}
 
    <div class="container">
-        <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
-        <div class="col-9 d-flex align-items-center">
-            <h3 style="color: #000000; font-weight: bold; font-size: 36px">Fetch images from Sentinel-hub</h3>
-        </div>
-            <div class="col-3">
-                {% if not request.user.is_authenticated %}
-                <button type="button" class="btn btn-primary" name="login" value="login">
-                <a href="{% url 'users:login' %}" style="color: white;">Login</a>
-                </button>
-                {% else %}
-                {% comment %} <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;"> {% endcomment %}
-                    <h6><strong>Username:</strong> {{ user.username }}</h6> 
-                    <h6><strong>Email:</strong> {{ user.email }}</h6>
-                    <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
-                    <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
-                {% endif %}
-        </div>
-        </div>
-
     {{ form.media }}
    <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
     {% csrf_token %}

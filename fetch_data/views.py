@@ -152,7 +152,10 @@ class territory_fetch_APIView(APIView):
 def convert_view(request):
     if request.method == 'GET':
         form = ConvertForm()
-        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
+        return render(request, "fetch_data/Convert.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
 
-    elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
+    elif request.method == 'POST' and 'convert_xyz2bbox' in request.POST and request.user.is_authenticated:
+        pass
+
+    elif request.method == 'POST' and 'convert_bbox2xyz' in request.POST and request.user.is_authenticated:
         pass

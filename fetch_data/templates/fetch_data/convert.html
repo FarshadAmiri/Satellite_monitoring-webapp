@@ -1,11 +1,16 @@
-{% load static %}
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Fetch data</title>
-   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
-</head>
-<body>
+{% block body %}
+<div class="row" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px">
+        <div class="col-12" style="background-color: #ECFFE0; padding: 50px; border-radius: 25px;">
+        <h2 style="font-weight: bold; color: #943BBE">Conversion tool</h3>
+        <br>
+            <div>
+            <label for="conversion_mode" style="font-weight: bold">Mode:</label>
+            <select id="coordinate_type" name="coordinate_type">
+            <option value="xy">x, y</option>
+            <option value="lonlat">Lon, Lat</option>
+            </select>
+            </div>
+
+{% endblock %}

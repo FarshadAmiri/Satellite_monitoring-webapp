@@ -5,6 +5,21 @@
   </head>
   <body>
   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+    <nav class="navbar navbar-dark bg-light">
+        <form class="container-fluid d-flex justify-content-between">
+            <div>
+                <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-secondary" type="button">Tools</a>
+            </div>
+            <div>
+                    {% if not request.user.is_authenticated %}
+                    <a href="{% url 'users:login' %}" class="btn btn-outline-primary me-2" type="button">Log in</a>
+                    {% else %}
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-success me-2" type="button">@{{user.username}}</a>
+                    {% endif %}
+                    <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-danger" type="button">Log out</a>
+            </div>
+        </form>
+    </nav>
   <div class="container">
         <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
         <div class="col-9 d-flex align-items-center">
@@ -24,7 +39,7 @@
                 {% endif %}
         </div>
         </div>
-        {% block content %}
+        {% block body %}
         {% endblock %}
    </body>
 </html>
