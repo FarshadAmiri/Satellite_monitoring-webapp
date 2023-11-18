@@ -1,0 +1,103 @@
+{% extends "fetch_data\base.html" %}
+{% load static %}
+
+{% block body %}
+<div class="container">
+    <div class="row" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px;">
+        <h2 style="font-weight: bold; font-size: 38px ;color: #18191a; display: flex; justify-content: center; padding-bottom: 20px;">Coordinations Conversion</h3>
+        <div class="col-6" style="background-color: #ECFFE0; padding: 50px; border-radius: 25px;">
+            <form action="{% url 'fetch_data:conversions' %}" method="post">
+            {% csrf_token %}
+            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">X, Y -> Lon, Lat</h3>
+            <br>
+            <div class="row">
+                <div class="col-3">
+                    <label for="zoom_2lonlat" style="font-weight: bold">Zoom</label>
+                    {{ form_2lonlat.zoom_2lonlat }}
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-3">
+                    <label for="x_min" style="font-weight: bold">X min</label>
+                    {{ form_2lonlat.x_min }}
+                </div>
+                <div class="col-3">
+                    <label for="x_max" style="font-weight: bold">X max</label>
+                    {{ form_2lonlat.x_max }}
+                </div>
+                </div>
+                <br>
+                <div class="row">
+                <div class="col-3">
+                    <label for="y_min" style="font-weight: bold">Y min</label>
+                    {{ form_2lonlat.y_min }}
+                </div>
+                <div class="col-3">
+                    <label for="y_max" style="font-weight: bold">Y max</label>
+                    {{ form_2lonlat.y_max }}
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-dark" name="convert_2lonlat" style="color" >Convert</button>
+                </div>
+            </div>
+            </div>
+        <div class="col-6"  style="background-color: #FEFFE0; padding: 45px; border-radius: 25px;">
+            <form action="{% url 'fetch_data:conversions' %}" method="post">
+            {% csrf_token %}
+            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">Lon, Lat -> X, Y</h3>
+            <br>
+            <div class="row">
+                <div class="col-3">
+                    <label for="zoom_2xy" style="font-weight: bold">Zoom</label>
+                    {{ form_2xy.zoom_2xy }}
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-3">
+                    <label for="lon_min" style="font-weight: bold">Lon min</label>
+                    {{ form_2xy.lon_min }}
+                </div>
+                <div class="col-3">
+                    <label for="lon_max" style="font-weight: bold">Lon max</label>
+                    {{ form_2xy.lon_max }}
+                </div>
+                </div>
+                <br>
+                <div class="row">
+                <div class="col-3">
+                    <label for="lat_min" style="font-weight: bold">Lat min</label>
+                    {{ form_2xy.lat_min }}
+                </div>
+                <div class="col-3">
+                    <label for="lat_max" style="font-weight: bold">Lat max</label>
+                    {{ form_2xy.lat_max }}
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-dark" name="convert_2xy" style="color" >Convert</button>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class= "col-6">
+            {% if convert_2lonlat_res %}
+                <h4>{{convert_2lonlat_res}}</h4>
+            {% endif %}
+            </div>
+            <div class= "col-6">
+            {% if convert_2xy_res %}
+                <h4>{{convert_2xy_res}}</h4>
+            {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

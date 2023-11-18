@@ -5,41 +5,72 @@
   </head>
   <body>
   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-    <nav class="navbar navbar-dark bg-light">
-        <form class="container-fluid d-flex justify-content-between">
-            <div>
-                <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-secondary" type="button">Tools</a>
-            </div>
-            <div>
-                    {% if not request.user.is_authenticated %}
-                    <a href="{% url 'users:login' %}" class="btn btn-outline-primary me-2" type="button">Log in</a>
-                    {% else %}
-                    <a href="{% url 'users:profile' %}" class="btn btn-outline-success me-2" type="button">@{{user.username}}</a>
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Fetch data</title>
+   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+   <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</head>
+<body>
+    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+    {% block navbar %}
+    <style>
+    .navbar-light .navbar-nav .nav-link:hover {
+        color: #fff; /* Change the color to your desired hover color */
+        background-color: rgba(60, 60, 0, 0.6); /* Change the background color to your desired hover color */
+    }
+    </style>
+    <nav class="navbar navbar-expand-lg navbar-light" style="navbar-light-hover-color:rgba($black, .7); background-color: #e6eaf0;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'fetch_data:SentinelFetch' %}">OceanGuard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{% url 'fetch_data:SentinelFetch' %}">Fetch data</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarScrollingDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarScrollingDropdown">
+                            <li><a class="dropdown-item" href="{% url 'fetch_data:conversions' %}">Convert coordinations</a></li>
+                            <li><a class="dropdown-item" href="#">Calculate distance between two points</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">Something else here</a></li>
+                        </ul>
+                        </li>
+                    {% if user.is_superuser %}
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="{% url 'fetch_data:SentinelFetch' %}">Supervisor panel</a>
+                        </li>
                     {% endif %}
-                    <a href="{% url 'users:logout' %}" class="btn btn-sm btn-outline-danger" type="button">Log out</a>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        {% if not request.user.is_authenticated %}
+                            <a href="{% url 'users:login' %}" style="font-weight: bold; font-size: 16px" class="btn btn-success" type="button">Log in</a>
+                        {% else %}
+                            <a href="{% url 'users:profile' %}" style="font-size: 16px; margin: 3px" class="btn btn-primary" type="button">@{{user.username}}</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'users:logout' %}" style="font-size: 16px; margin: 3px" class="btn btn-danger" type="button">Log out</a>
+                    </li>
+                </ul>
             </div>
-        </form>
+        </div>
     </nav>
-  <div class="container">
-        <div class="row" style="padding: 12px; border-radius: 15px; background-color: #cbf5f5;">
-        <div class="col-9 d-flex align-items-center">
-            <h3 style="color: #000000; font-weight: bold; font-size: 36px">Fetch images from Sentinel-hub</h3>
-        </div>
-            <div class="col-3">
-                {% if not request.user.is_authenticated %}
-                <button type="button" class="btn btn-primary" name="login" value="login">
-                <a href="{% url 'users:login' %}" style="color: white;">Login</a>
-                </button>
-                {% else %}
-                {% comment %} <div style="background-color: #cbf5f5; padding: 12px; border-radius: 10px;"> {% endcomment %}
-                    <h6><strong>Username:</strong> {{ user.username }}</h6> 
-                    <h6><strong>Email:</strong> {{ user.email }}</h6>
-                    <a href="{% url 'users:logout' %}" type="button" class="btn btn-secondary">Log out</a>
-                    <a href="{% url 'users:profile' %}" type="button" class="btn btn-info">Profile Page</a>
-                {% endif %}
-        </div>
-        </div>
-        {% block body %}
-        {% endblock %}
+    {% endblock %}
+
+    {% block body %}
+    {% endblock %}
    </body>
 </html>

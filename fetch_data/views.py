@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 import asyncio, logging, time
 from .forms import *
-from fetch_data.utilities.tools import territory_divider, coords_2_xyz_newton
+from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
@@ -19,7 +19,7 @@ from .serializers import *
 # @login_required(login_url='users:login', )
 def territory_fetch(request):
     if request.method == 'GET':
-        form = SentinelFetchForm(initial={"inference": True})
+        form = SentinelFetchForm()
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
 
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
@@ -87,13 +87,50 @@ def territory_fetch(request):
             n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             form = SentinelFetchForm(initial={"x_min": preset_area.x_min, "x_max": preset_area.x_max, "y_min": preset_area.y_min,
-                                              "y_max": preset_area.y_max,"zoom": preset_area.zoom, "start_date": start_date, "end_date": end_date,
+                                              "y_max": preset_area.y_max,"zoom": preset_area.zoom, "lon_min": preset_area.bbox_lon1,
+                                              "lon_max": preset_area.bbox_lon2, "lat_min": preset_area.bbox_lat1,
+                                              "lat_max": preset_area.bbox_lat2, "start_date": start_date, "end_date": end_date,
                                               "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
                                               "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area_id
                                                })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
 
-
+    elif request.method == 'POST' and 'clear_coords' in request.POST:
+        form = SentinelFetchForm(request.POST)
+        if form.is_valid():
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
+            base_date = form.cleaned_data['base_date']
+            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
+            inference = form.cleaned_data['inference']
+            form = SentinelFetchForm(initial={"start_date": start_date, "end_date": end_date,
+                                            "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
+                                            "overwrite_repetitious": overwrite_repetitious, "inference": inference,
+                                                })
+        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
+                                                                         'user':request.user})
+    
+    elif request.method == 'POST' and 'clear_dates' in request.POST:
+        form = SentinelFetchForm(request.POST)
+        if form.is_valid():
+            zoom = form.cleaned_data['zoom']
+            x_min = form.cleaned_data['x_min']
+            x_max = form.cleaned_data['x_max']
+            y_min = form.cleaned_data['y_min']
+            y_max = form.cleaned_data['y_max']
+            lon_min = form.cleaned_data['lon_min']
+            lon_max = form.cleaned_data['lon_max']
+            lat_min = form.cleaned_data['lat_min']
+            lat_max = form.cleaned_data['lat_max']
+            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
+            inference = form.cleaned_data['inference']
+            form = SentinelFetchForm(initial={"zoom": zoom, "x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max,
+                                              "lon_min": lon_min, "lon_max": lon_max, "lat_min": lat_min, "lat_max": lat_max,
+                                              "overwrite_repetitious": overwrite_repetitious, "inference": inference,
+                                                })
+        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
+                                                                         'user':request.user})
 
 
 def test(request):
@@ -149,13 +186,46 @@ class territory_fetch_APIView(APIView):
     
 
 
-def convert_view(request):
+def ConvertView(request):
     if request.method == 'GET':
-        form = ConvertForm()
-        return render(request, "fetch_data/Convert.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
+        form_2xy = Convert2xyForm()
+        form_2lonlat = Convert2lonlatForm()
+        return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
+        "form_2lonlat": form_2lonlat,'user':request.user})
 
-    elif request.method == 'POST' and 'convert_xyz2bbox' in request.POST and request.user.is_authenticated:
-        pass
+    elif request.method == 'POST' and 'convert_2lonlat' in request.POST and request.user.is_authenticated:
+        form_2lonlat = Convert2lonlatForm(request.POST)
+        form_2xy = Convert2xyForm(request.POST)
+        if form_2lonlat.is_valid():
+            zoom = form_2lonlat.cleaned_data['zoom_2lonlat']
+            x_min = form_2lonlat.cleaned_data['x_min']
+            x_max = form_2lonlat.cleaned_data['x_max']
+            y_min = form_2lonlat.cleaned_data['y_min']
+            y_max = form_2lonlat.cleaned_data['y_max']
 
-    elif request.method == 'POST' and 'convert_bbox2xyz' in request.POST and request.user.is_authenticated:
-        pass
+            x_range = (x_min, x_max)
+            y_range = (y_min, y_max)
+            lon_min, lat_min, lon_max, lat_max = xyz2bbox_territory(x_range, y_range, zoom)
+            convert_2lonlat_res = {'lon_min': lon_min, 'lat_min': lat_min, 'lon_max': lon_max, 'lat_max': lat_max}
+
+            return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
+            "form_2lonlat": form_2lonlat, 'convert_2lonlat_res': convert_2lonlat_res ,'user':request.user})
+
+
+    elif request.method == 'POST' and 'convert_2xy' in request.POST and request.user.is_authenticated:
+        form_2xy = Convert2xyForm(request.POST)
+        form_2lonlat = Convert2lonlatForm(request.POST)
+        if form_2xy.is_valid():
+            zoom = form_2xy.cleaned_data['zoom_2xy']
+            lon_min = form_2xy.cleaned_data['lon_min']
+            lon_max = form_2xy.cleaned_data['lon_max']
+            lat_min = form_2xy.cleaned_data['lat_min']
+            lat_max = form_2xy.cleaned_data['lat_max']
+
+            coords = (lon_min, lat_min, lon_max, lat_max)
+            (x_min, x_max), (y_min, y_max), zoom = coords_2_xyz_newton(coords, zoom)
+            convert_2xy_res = {"x_min": x_min, "x_max": x_max, 'y_min': y_min, 'y_max': y_max, 'zoom': zoom}
+            print("convert_2xy_res:", convert_2xy_res)
+
+            return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
+            "form_2lonlat": form_2lonlat, 'convert_2xy_res': convert_2xy_res, 'user':request.user})
