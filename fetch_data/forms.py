@@ -96,19 +96,19 @@ class SentinelFetchForm(forms.Form):
 class Convert2lonlatForm(forms.Form):
     
     zoom_2lonlat = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
-    x_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    x_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_min_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_max_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_min_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    y_max_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
     
 
 
 class Convert2xyForm(forms.Form):
     
     zoom_2xy = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
-    lon_min = forms.FloatField(min_value=-180, max_value=180, required=False)
-    lon_max = forms.FloatField(min_value=-180, max_value=180, required=False)
-    lat_min = forms.FloatField(min_value=-90, max_value=90, required=False)
-    lat_max = forms.FloatField(min_value=-90, max_value=90, required=False)
+    lon_min_2xy = forms.FloatField(min_value=-180, max_value=180, required=False)
+    lon_max_2xy = forms.FloatField(min_value=-180, max_value=180, required=False)
+    lat_min_2xy = forms.FloatField(min_value=-90, max_value=90, required=False)
+    lat_max_2xy = forms.FloatField(min_value=-90, max_value=90, required=False)
 
 

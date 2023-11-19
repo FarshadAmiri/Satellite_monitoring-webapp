@@ -109,7 +109,7 @@ def territory_fetch(request):
                                             "overwrite_repetitious": overwrite_repetitious, "inference": inference,
                                                 })
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
-                                                                         'user':request.user})
+                                                                        'user':request.user})
     
     elif request.method == 'POST' and 'clear_dates' in request.POST:
         form = SentinelFetchForm(request.POST)
@@ -188,6 +188,7 @@ class territory_fetch_APIView(APIView):
 
 def ConvertView(request):
     if request.method == 'GET':
+        logging.info("GET 1")
         form_2xy = Convert2xyForm()
         form_2lonlat = Convert2lonlatForm()
         return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
@@ -196,35 +197,40 @@ def ConvertView(request):
     elif request.method == 'POST' and 'convert_2lonlat' in request.POST and request.user.is_authenticated:
         form_2lonlat = Convert2lonlatForm(request.POST)
         form_2xy = Convert2xyForm(request.POST)
+        decimal_round = int(request.POST.get('decimal_round')) if request.POST.get('decimal_round')!=None else 6
         if form_2lonlat.is_valid():
-            zoom = form_2lonlat.cleaned_data['zoom_2lonlat']
-            x_min = form_2lonlat.cleaned_data['x_min']
-            x_max = form_2lonlat.cleaned_data['x_max']
-            y_min = form_2lonlat.cleaned_data['y_min']
-            y_max = form_2lonlat.cleaned_data['y_max']
+            zoom_2lonlat = form_2lonlat.cleaned_data['zoom_2lonlat']
+            x_min_2lonlat = form_2lonlat.cleaned_data['x_min_2lonlat']
+            x_max_2lonlat = form_2lonlat.cleaned_data['x_max_2lonlat']
+            y_min_2lonlat = form_2lonlat.cleaned_data['y_min_2lonlat']
+            y_max_2lonlat = form_2lonlat.cleaned_data['y_max_2lonlat']
 
-            x_range = (x_min, x_max)
-            y_range = (y_min, y_max)
-            lon_min, lat_min, lon_max, lat_max = xyz2bbox_territory(x_range, y_range, zoom)
-            convert_2lonlat_res = {'lon_min': lon_min, 'lat_min': lat_min, 'lon_max': lon_max, 'lat_max': lat_max}
+            x_range_2lonlat = (x_min_2lonlat, x_max_2lonlat)
+            y_range_2lonlat = (y_min_2lonlat, y_max_2lonlat)
+            lon_min_2lonlat, lat_min_2lonlat, lon_max_2lonlat, lat_max_2lonlat = xyz2bbox_territory(x_range_2lonlat, y_range_2lonlat, zoom_2lonlat)
+            lon_min_2lonlat, lat_min_2lonlat, lon_max_2lonlat, lat_max_2lonlat = list(map(lambda x: round(x, decimal_round), (lon_min_2lonlat, lat_min_2lonlat, lon_max_2lonlat, lat_max_2lonlat)))
+            convert_2lonlat_res = {'lon_min_2lonlat': lon_min_2lonlat, 'lat_min_2lonlat': lat_min_2lonlat, 'lon_max_2lonlat': lon_max_2lonlat, 'lat_max_2lonlat': lat_max_2lonlat}
 
             return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
             "form_2lonlat": form_2lonlat, 'convert_2lonlat_res': convert_2lonlat_res ,'user':request.user})
 
 
     elif request.method == 'POST' and 'convert_2xy' in request.POST and request.user.is_authenticated:
+        logging.info("before form_2xy validation")
+        print("before form_2xy validation")
         form_2xy = Convert2xyForm(request.POST)
         form_2lonlat = Convert2lonlatForm(request.POST)
+        logging.info("before form_2xy validation")
         if form_2xy.is_valid():
-            zoom = form_2xy.cleaned_data['zoom_2xy']
-            lon_min = form_2xy.cleaned_data['lon_min']
-            lon_max = form_2xy.cleaned_data['lon_max']
-            lat_min = form_2xy.cleaned_data['lat_min']
-            lat_max = form_2xy.cleaned_data['lat_max']
+            zoom_2xy = form_2xy.cleaned_data['zoom_2xy']
+            lon_min_2xy = form_2xy.cleaned_data['lon_min_2xy']
+            lon_max_2xy = form_2xy.cleaned_data['lon_max_2xy']
+            lat_min_2xy = form_2xy.cleaned_data['lat_min_2xy']
+            lat_max_2xy = form_2xy.cleaned_data['lat_max_2xy']
 
-            coords = (lon_min, lat_min, lon_max, lat_max)
-            (x_min, x_max), (y_min, y_max), zoom = coords_2_xyz_newton(coords, zoom)
-            convert_2xy_res = {"x_min": x_min, "x_max": x_max, 'y_min': y_min, 'y_max': y_max, 'zoom': zoom}
+            coords_2xy = (lon_min_2xy, lat_min_2xy, lon_max_2xy, lat_max_2xy)
+            (x_min_2xy, x_max_2xy), (y_min_2xy, y_max_2xy), zoom_2xy = coords_2_xyz_newton(coords_2xy, zoom_2xy)
+            convert_2xy_res = {"x_min_2xy": x_min_2xy, "x_max_2xy": x_max_2xy, 'y_min_2xy': y_min_2xy, 'y_max_2xy': y_max_2xy, 'zoom_2xy': zoom_2xy}
             print("convert_2xy_res:", convert_2xy_res)
 
             return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,

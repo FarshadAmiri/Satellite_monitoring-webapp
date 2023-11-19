@@ -1,14 +1,15 @@
 {% extends "fetch_data\base.html" %}
 {% load static %}
+<script type="text/javascript" src="{% static 'js/fetch_data/sentinelfetch.js' %}"></script>
 
 {% block body %}
 <div class="container">
 {{ form.media }}
 <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
 {% csrf_token %}
-<div class="row" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px">
-    <div class="col-6" style="background-color: #ECFFE0; padding: 50px; border-radius: 25px;">
-    <h2 style="font-weight: bold; color: #943BBE">Coordinations</h3>
+<div class="row" style="padding: 25px; border-radius: 25px; background-color: #DFF3FF; margin: 6px">
+    <div class="col-6" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
+    <h2 style="font-weight: bold; color: #030F7F;">Coordinations</h3>
     <br>
         <div>
         <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
@@ -25,24 +26,28 @@
     <br>
         <div id="xy_fields">
             <div class="row">
-                <div class ="col-3">
+                <div class ="col-2">
                     <label for="x_min" style="font-weight: bold">X min</label>
-                    {{ form.x_min }}
+                    <input type="number" id="x_min" name="x_min" value="{{ form.x_min.value|escape }}">
                 </div>
-                <div class ="col-3">
+                <div class ="col-4">
+                </div>
+                <div class ="col-2">
                     <label for="x_max" style="font-weight: bold">X max</label>
-                    {{ form.x_max }}
+                    <input type="number" id="x_max" name="x_max" value="{{ form.x_max.value|escape }}">
                 </div>
             </div>
             <br>
             <div class="row">
-                <div class ="col-3">
+                <div class ="col-2">
                     <label for="y_min" style="font-weight: bold">Y min</label>
-                    {{ form.y_min }}
+                    <input type="number" id="y_min" name="y_min" value="{{ form.y_min.value|escape }}">
                 </div>
-                <div class ="col-3">
+                <div class ="col-4">
+                </div>
+                <div class ="col-2">
                     <label for="y_max" style="font-weight: bold">Y max</label>
-                    {{ form.y_max }}
+                    <input type="number" id="y_max" name="y_max" value="{{ form.y_max.value|escape }}">
                 </div>
             </div>
         </div>
@@ -51,22 +56,26 @@
             <div class="row">
                 <div class ="col-3">
                     <label for="lon_min" style="font-weight: bold">Lon min:</label>
-                    {{ form.lon_min }}
+                    <input type="number" id="lon_min" name="lon_min" value="{{ form.lon_min.value|escape }}">
+                </div>
+                <div class ="col-3">
                 </div>
                 <div class ="col-3">
                     <label for="lon_max" style="font-weight: bold">Lon max:</label>
-                    {{ form.lon_max }}
+                    <input type="number" id="lon_max" name="lon_max" value="{{ form.lon_max.value|escape }}">
                 </div>
             </div>
             <br>
             <div class="row">
                 <div class ="col-3">
                     <label for="lat_min" style="font-weight: bold">Lat min:</label>
-                    {{ form.lat_min }}
+                    <input type="number" id="lat_min" name="lat_min" value="{{ form.lat_min.value|escape }}">
+                </div>
+                <div class ="col-3">
                 </div>
                 <div class ="col-3">
                     <label for="lat_max" style="font-weight: bold">Lat max:</label>
-                    {{ form.lat_max }}      
+                    <input type="number" id="lat_max" name="lat_max" value="{{ form.lat_max.value|escape }}">     
                 </div>
             </div>
         </div>
@@ -82,13 +91,14 @@
                     <button type="submit" class="btn btn-dark" name="fill_coords" style="color" >Fill coordinates</button>
                 </div>
                 <div class="col-2">
-                    <button type="submit" class="btn btn-dark" name="clear_coords" style="color" >Clear</button>
+                    {% comment %} <input type="button" value="Reset" id="resetBtn" onClick="this.form.reset()" /> {% endcomment %}
+                    <button type="submit" class="btn btn-dark" name="clear_coords" >Clear</button>
                 </div>
             </div>
         </div>
     </div> 
-        <div class="col-6"  style="background-color: #FEFFE0; padding: 45px; border-radius: 25px;">
-        <h2 style="font-weight: bold; color: #943BBE">Time interval</h3>
+        <div class="col-6"  style="background-color: #FFFFFF ; padding: 45px; border-radius: 25px;">
+        <h2 style="font-weight: bold; color: #030F7F;">Time interval</h3>
         <br>
             <div>
                 <label for="date_type" style="font-weight: bold">Choose Date input Type:</label>
@@ -126,17 +136,17 @@
     <br>
     <div class="form-group mx-sm-3 mb-2">
     <br>
-    <div id="other_parameters">
-        <div class="row">
-            <div class="col-4">
+    <div id="other_parameters" style="display: flex; justify-content: center; align-items: center;">
+        <div class="row" style="background-color: #B3DAFF   ; padding: 20px; border-radius: 25px;">
+            <div class="col-4" style="color: #000000; font-size: 18px;">
                 <label for="overwrite_repetitious" style="font-weight: bold">Overwrite existing images:</label>
                     {{ form.overwrite_repetitious }}
             </div>
-            <div class="col-4">
+            <div class="col-4" style="color: #000000; font-size: 18px;">
                 <label for="inference" style="font-weight: bold">Apply watercraft detection</label>
                     {{ form.inference }}
             </div>
-            <div class="col-4">
+            <div class="col-4" style="color: #000000; font-size: 18px;">
                 <div class="form-check form-check-inline">
                     <label class="form-check-label" for="save_concated" style="font-weight: bold">Save concatenated inference</label>
                     <input class="form-check-input" type="checkbox" id="save_concated" name="save_concated" value="True" checked>

@@ -1,0 +1,25 @@
+body {
+    background-image: url("\\static\\bcg\\earth1.jpg");
+    /* background-image: url('https://wallpapercrafter.com/th800/124985-3D-render-space-satellite-Earth-orbital-view.jpg'); Replace with the path to your background image */
+    background-size: cover;
+    background-position: center;
+    /* Add other CSS properties as needed */
+  }
+
+  nav {
+    background-color: rgb(0, 0, 0);
+}
+
+  #nav_item,
+  #navbarScrollingDropdown{
+    color: rgb(255, 255, 255);
+    /* font-weight: bold; */
+    font-size: 22px;
+  }
+
+  .navbar-light .navbar-nav .nav-link:hover {
+    background-color: rgb(99, 99, 99);
+    color:rgb(27, 27, 27);
+    border-radius: 15px
+}
+

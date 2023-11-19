@@ -1,41 +1,73 @@
 {% extends "fetch_data\base.html" %}
 {% load static %}
 
+{% block head-title %}
+    <title>Conversion tools</title>
+{% endblock %}
+
+{% block head-static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/conversion.css' %}">
+{%endblock %}
+
 {% block body %}
+
 <div class="container">
-    <div class="row" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px;">
-        <h2 style="font-weight: bold; font-size: 38px ;color: #18191a; display: flex; justify-content: center; padding-bottom: 20px;">Coordinations Conversion</h3>
-        <div class="col-6" style="background-color: #ECFFE0; padding: 50px; border-radius: 25px;">
+    <div class="row" id="outer_box" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px">
+        <h2 id= "page_title">Coordinations Conversion</h2>
+        <div class="col-6" id="halfbox">
             <form action="{% url 'fetch_data:conversions' %}" method="post">
             {% csrf_token %}
-            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">X, Y -> Lon, Lat</h3>
+            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">X, Y -> Lon, Lat</h2>
             <br>
             <div class="row">
-                <div class="col-3">
-                    <label for="zoom_2lonlat" style="font-weight: bold">Zoom</label>
+                <div class="col-2">
+                <div class="form-group">
+                    <label for="zoom_2lonlat" style="font-weight: bold;">Zoom</label>
                     {{ form_2lonlat.zoom_2lonlat }}
+                </div>
                 </div>
             </div>
             <br>
             <div class="row">
                 <div class="col-3">
-                    <label for="x_min" style="font-weight: bold">X min</label>
-                    {{ form_2lonlat.x_min }}
+                    <label for="x_min" style="font-weight: bold;">X min</label>
+                    {{ form_2lonlat.x_min_2lonlat }}
+                </div>
+                <div class="col-1">
                 </div>
                 <div class="col-3">
-                    <label for="x_max" style="font-weight: bold">X max</label>
-                    {{ form_2lonlat.x_max }}
+                    <label for="x_max" style="font-weight: bold;">X max</label>
+                    {{ form_2lonlat.x_max_2lonlat }}
                 </div>
                 </div>
                 <br>
                 <div class="row">
                 <div class="col-3">
-                    <label for="y_min" style="font-weight: bold">Y min</label>
-                    {{ form_2lonlat.y_min }}
+                    <label for="y_min" style="font-weight: bold;">Y min</label>
+                    {{ form_2lonlat.y_min_2lonlat }}
+                </div>
+                <div class="col-1">
                 </div>
                 <div class="col-3">
-                    <label for="y_max" style="font-weight: bold">Y max</label>
-                    {{ form_2lonlat.y_max }}
+                    <label for="y_max" style="font-weight: bold;">Y max</label>
+                    {{ form_2lonlat.y_max_2lonlat }}
+                </div>
+                <div class="col-3">
+                </div>
+                <div class="col-2">
+                    <label for="decimal_round" style="font-weight: bold;">Decimals</label>
+                    <select name="decimal_round" id="decimal_round" value="6" min="1" max="10" value="6">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
                 </div>
             </div>
             <br>
@@ -51,31 +83,37 @@
             <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">Lon, Lat -> X, Y</h3>
             <br>
             <div class="row">
-                <div class="col-3">
+                <div class="col-2">
+                <div class="form-group">
                     <label for="zoom_2xy" style="font-weight: bold">Zoom</label>
                     {{ form_2xy.zoom_2xy }}
+                </div>
                 </div>
             </div>
             <br>
             <div class="row">
-                <div class="col-3">
+                <div class="col-4">
                     <label for="lon_min" style="font-weight: bold">Lon min</label>
-                    {{ form_2xy.lon_min }}
+                    {{ form_2xy.lon_min_2xy }}
                 </div>
-                <div class="col-3">
+                <div class="col-1">
+                </div>
+                <div class="col-4">
                     <label for="lon_max" style="font-weight: bold">Lon max</label>
-                    {{ form_2xy.lon_max }}
+                    {{ form_2xy.lon_max_2xy }}
                 </div>
                 </div>
                 <br>
                 <div class="row">
-                <div class="col-3">
+                <div class="col-4">
                     <label for="lat_min" style="font-weight: bold">Lat min</label>
-                    {{ form_2xy.lat_min }}
+                    {{ form_2xy.lat_min_2xy }}
                 </div>
-                <div class="col-3">
+                <div class="col-1">
+                </div>
+                <div class="col-4">
                     <label for="lat_max" style="font-weight: bold">Lat max</label>
-                    {{ form_2xy.lat_max }}
+                    {{ form_2xy.lat_max_2xy }}
                 </div>
             </div>
             <br>
@@ -85,17 +123,19 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class= "col-6">
+        <div class="row" style="margin-top: 20px; margin-left: 20px;">
+        <div class="col-6">
             {% if convert_2lonlat_res %}
-                <h4>{{convert_2lonlat_res}}</h4>
+            <h4>Lon range: <span class="variable">{{ convert_2lonlat_res.lon_min_2lonlat }}</span> to <span class="variable">{{ convert_2lonlat_res.lon_max_2lonlat }}</span></h4>
+            <h4>Lat range: <span class="variable">{{ convert_2lonlat_res.lat_min_2lonlat }}</span> to <span class="variable">{{ convert_2lonlat_res.lat_max_2lonlat }}</span></h4>
             {% endif %}
-            </div>
-            <div class= "col-6">
+        </div>
+        <div class="col-6">
             {% if convert_2xy_res %}
-                <h4>{{convert_2xy_res}}</h4>
+            <h4>X range: <span class="variable">{{ convert_2xy_res.x_min_2xy }}</span> to <span class="variable">{{ convert_2xy_res.x_max_2xy }}</span></h4>
+            <h4>Y range: <span class="variable">{{ convert_2xy_res.y_min_2xy }}</span> to <span class="variable">{{ convert_2xy_res.y_max_2xy }}</span></h4>
             {% endif %}
-            </div>
+        </div>
         </div>
     </div>
 </div>

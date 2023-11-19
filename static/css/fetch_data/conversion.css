@@ -1,0 +1,39 @@
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-weight: bold;
+}
+
+.form-group input {
+  margin-top: 5px;
+}
+
+.row#outer_box {
+  padding: 25px;
+  border-radius: 25px;
+  background-color: #D9DCD2;
+  margin: 6px;
+ }
+
+ h2#page_title {
+  font-weight: bold; 
+  font-size: 38px ;
+  color: #18191a;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 20px;
+ }
+
+ #halfbox {
+  background-color: #ECFFE0;
+  padding: 50px;
+  border-radius: 25px;
+ }
+
+ .variable {
+  color: rgb(182, 71, 43);
+}

@@ -293,6 +293,7 @@ def coords_2_xyz_newton(coords, zoom):
             y_min = optimize.newton(y2lat_min, y_min0)
             y_max = optimize.newton(y2lat_max, y_max0)
             x_min, x_max, y_min, y_max = list(map(lambda x: int(round(x,0)), (x_min, x_max, y_min, y_max)))
+            x_min, x_max , y_min, y_max = min(x_min, x_max) , max(x_min, x_max), min(y_min, y_max), max(y_min, y_max)
             x_range, y_range = (x_min, x_max), (y_min, y_max)
             return (x_range, y_range, zoom)
         except:
