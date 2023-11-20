@@ -25,19 +25,21 @@ input[type=checkbox]
 
 
 #clear_coords, #clear_dates {
-  background-color: rgb(0, 0, 0);
-  color: rgb(255, 255, 255);
+  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(157, 173, 196));
+  background-size: 100%;
+  color: rgb(0, 0, 0);
   border-color: rgb(0, 0, 0);
-  /* font-weight: bolder; */
+  font-weight: bolder;
   font-size: 16px;
 }
 
 #fill_coords {
-  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(170, 170, 170));
+  /* background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(170, 170, 170)); */
+  background-image: linear-gradient(to bottom, rgb(0, 0, 0), rgb(0, 46, 114));
   background-size: 100%;
   background-position: up;
-  color: rgb(0, 0, 0);
+  color: rgb(255, 255, 255);
   border-color: rgb(0, 0, 0);
-  font-weight: bold;
-  font-size: 16px;
+  /* font-weight: bold; */
+  font-size: 17px;
   }
