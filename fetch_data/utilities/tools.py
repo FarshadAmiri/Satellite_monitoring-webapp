@@ -45,6 +45,9 @@ def bbox_geometry_calculator(bbox):
     return width, height, area
 
 
+def get_current_datetime():
+    now = datetime.datetime.now()
+    return now.strftime("%Y-%m-%dT%H:%M:%S")
 
 def shamsi_date_time():
     # Get the current Gregorian date and time
@@ -257,9 +260,16 @@ def bbox_xyz_table(x_range, y_range, zoom):
 def coords_2_xyz_newton(coords, zoom):
     from scipy import optimize
     import math
-
+    
     lon1, lat1, lon2, lat2 = coords
+
     xy0_samples = [i*1000 for i in range(1, 26, 3)]
+    if zoom <= 10:
+        for i in [500, 250, 100, 50, 25, 10, 5, 2]:
+            xy0_samples.append(i)
+    elif zoom >= 20:
+        for i in [i*1000 for i in range(26, 1000, 5)]:
+            xy0_samples.append(i)
 
     def x2lon_min(x):
         nonlocal zoom, lon1

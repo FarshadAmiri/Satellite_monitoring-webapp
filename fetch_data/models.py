@@ -1,47 +1,37 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
-from fetch_data.utilities.tools import xyz2bbox, xyz2bbox_territory
+from users.models import User
+from fetch_data.utilities.tools import xyz2bbox_territory, bbox_geometry_calculator
 
 class PresetArea(models.Model):
-    bbox_lon1 = models.FloatField(null=True, blank=True)
-    bbox_lat1 = models.FloatField(null=True, blank=True)
-    bbox_lon2 = models.FloatField(null=True, blank=True)
-    bbox_lat2 = models.FloatField(null=True, blank=True)
-
-    zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
-    x_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    x_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    y_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
-    y_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    lon_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    lat_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    lon_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    lat_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    
+    width =  models.IntegerField(null=True, blank=True,)
+    height = models.IntegerField(null=True, blank=True,)
+    area = models.BigIntegerField(null=True, blank=True,)
 
     tag = models.CharField(max_length=128, primary_key=True,)
     description = models.TextField(max_length=800, null=True, blank=True,)
-
-    # def __str__(self):
-    #     return f'{self.tag}'
     
-    # def validate_x_max(self, value):
-    #     pass
-
-    # def validate_y_max(self, value):
-    #     pass
-
     def save(self, *args, **kwargs):
-        self.bbox_lon1, self.bbox_lat1, self.bbox_lon2, self.bbox_lat2 = xyz2bbox_territory((self.x_min, self.x_max), (self.y_min, self.y_max), self.zoom)
+        self.width, self.height, self.area = list(map(int, bbox_geometry_calculator((self.lon_min, self.lat_min, self.lon_max, self.lat_max))))
         super(PresetArea, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.tag
 
-    def x_range(self):
-        return f"{self.x_min:.0f} : {self.x_max:.0f}"
+    # def x_range(self):
+    #     return f"{self.x_min:.0f} : {self.x_max:.0f}"
     
-    def y_range(self):
-        return f"{self.y_min:.0f} : {self.y_max:.0f}"
+    # def y_range(self):
+    #     return f"{self.y_min:.0f} : {self.y_max:.0f}"
     
     def wgs84_coords(self):
         try:
-            return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
+            return f"{self.lon_min:.6f}, {self.lat_min:.6f}, {self.lon_max:.6f}, {self.lat_max:.6f}"
         except:
             return "-"
 
@@ -70,7 +60,7 @@ class SatteliteImage(models.Model):
 
     x = models.FloatField(null=True, blank=True)
     y = models.FloatField(null=True, blank=True)
-    zoom = models.FloatField(null=True, blank=True)
+    zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
 
     Area_tag = models.ForeignKey(PresetArea, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
     
@@ -132,4 +122,30 @@ class CoordsMap(models.Model):
         return f'x: {self.x}, y: {self.y}, zoom: {self.zoom}'
 
 
+class QueuedTasks(models.Model):
+    TASK_TYPES = [('fetch', 'fetch'), ('infer', 'inference'), ('fetch_infer', 'fetch_and_inference')]
+    TASK_STATUS = [('fetching', 'fetch_in_progress'), ('fetched', 'fetched'), ('inferencing', 'inference_in_progress'), ('inferenced', 'inferenced')]
 
+    task_id = models.CharField(primary_key=True, max_length=255)
+    user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
+    task_type = models.CharField(max_length=128, choices=TASK_TYPES)
+    task_status = models.CharField(max_length=128, choices=TASK_STATUS)
+    fetch_progress = models.IntegerField(null=True, blank=True)
+
+    area_tag = models.ForeignKey(PresetArea, null=True, on_delete=models.DO_NOTHING)
+    lon_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    lat_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    lon_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
+    lat_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
+
+    zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
+    x_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    x_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    y_max = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
+    
+    time_from = models.DateField()
+    time_to = models.DateField()
+
+    time_queued = models.DateTimeField(auto_now_add=True)
+    task_description = models.CharField(max_length=256)

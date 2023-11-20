@@ -19,22 +19,21 @@ def custom_titled_filter(title):
 
 @admin.register(PresetArea)
 class PresetAreasAdmin(admin.ModelAdmin):
-    list_display = ('tag', "x_range", "y_range", "zoom", "bbox_lon1", "bbox_lat1", "bbox_lon2", "bbox_lat2")
+    list_display = ('tag', "lon_min", "lon_max", "lat_min", "lat_max", "area", "width", "height")
     list_display_links = ['tag']
     ordering = ['tag']
-    list_filter = [('zoom', custom_titled_filter('zoom')),]
-    search_fields = ["tag", "x_min", "x_max", "y_min", "y_max", "bbox_lon1", "bbox_lat1", "bbox_lon2", "bbox_lat2",]
+    search_fields = ["tag", "lon_min", "lon_max", "lat_min", "lat_max"]
     # list_editable = ['tag',]
-    readonly_fields = ["bbox_lon1", "bbox_lat1", "bbox_lon2", "bbox_lat2", "wgs84_coords"]
+    readonly_fields = ["area", "width", "height", "wgs84_coords"]
     # date_hierarchy = 'datetime'
 
     fieldsets = (
+        ("Coordinates", {
+            "fields": ("tag", ("lon_min", "lon_max"), ("lat_min", "lat_max"),)
+        }),
         ("Area specifications", {
-            "fields": ("tag", "zoom", ("x_min", "x_max"), ("y_min", "y_max"),)
-        }),
-        ("Coordinations & info", {
-            'fields':('bbox_lon1', 'bbox_lat1', "bbox_lon2", "bbox_lat2",("wgs84_coords"))
-        }),
+            "fields" :("area", "width", "height")
+        })
         # ('More info' , {
         #     'classes':('collapse',), 'fields':('description')
         # }),

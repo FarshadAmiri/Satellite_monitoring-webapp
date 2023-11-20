@@ -1,8 +1,15 @@
 {% extends "fetch_data\base.html" %}
 {% load static %}
+
+{% block head-static %}
 <script type="text/javascript" src="{% static 'js/fetch_data/sentinelfetch.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/sentinel_fetch.css' %}">
+{% endblock %}
+
 
 {% block body %}
+<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+
 <div class="container">
 {{ form.media }}
 <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
@@ -11,20 +18,20 @@
     <div class="col-6" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
     <h2 style="font-weight: bold; color: #030F7F;">Coordinations</h3>
     <br>
-        <div>
-        <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
-        <select id="coordinate_type" name="coordinate_type">
-        <option value="xy">x, y</option>
-        <option value="lonlat">Lon, Lat</option>
-        </select>
-        </div>
+    <div>
+    <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
+    <select id="coordinate_type" name="coordinate_type">
+    <option value="xy">x, y</option>
+    <option value="lonlat" selected>Lon, Lat</option>
+    </select>
+    </div>
     <br>
         <div id="zoom_field">
             <label for="zoom" style="font-weight: bold">Zoom:</label>
             {{ form.zoom }}
         </div>
     <br>
-        <div id="xy_fields">
+        <div id="xy_fields" style="display:none;">
             <div class="row">
                 <div class ="col-2">
                     <label for="x_min" style="font-weight: bold">X min</label>
@@ -52,30 +59,30 @@
             </div>
         </div>
 
-        <div id="lonlat_fields" style="display:none;">
+        <div id="lonlat_fields">
             <div class="row">
                 <div class ="col-3">
                     <label for="lon_min" style="font-weight: bold">Lon min:</label>
-                    <input type="number" id="lon_min" name="lon_min" value="{{ form.lon_min.value|escape }}">
+                    <input type="number" step="0.000000001" id="lon_min" name="lon_min" value="{{ form.lon_min.value|escape }}">
                 </div>
                 <div class ="col-3">
                 </div>
                 <div class ="col-3">
                     <label for="lon_max" style="font-weight: bold">Lon max:</label>
-                    <input type="number" id="lon_max" name="lon_max" value="{{ form.lon_max.value|escape }}">
+                    <input type="number" step="0.000000001" id="lon_max" name="lon_max" value="{{ form.lon_max.value|escape }}">
                 </div>
             </div>
             <br>
             <div class="row">
                 <div class ="col-3">
                     <label for="lat_min" style="font-weight: bold">Lat min:</label>
-                    <input type="number" id="lat_min" name="lat_min" value="{{ form.lat_min.value|escape }}">
+                    <input type="number" step="0.000000001" id="lat_min" name="lat_min" value="{{ form.lat_min.value|escape }}">
                 </div>
                 <div class ="col-3">
                 </div>
                 <div class ="col-3">
                     <label for="lat_max" style="font-weight: bold">Lat max:</label>
-                    <input type="number" id="lat_max" name="lat_max" value="{{ form.lat_max.value|escape }}">     
+                    <input type="number" step="0.000000001" id="lat_max" name="lat_max" value="{{ form.lat_max.value|escape }}">     
                 </div>
             </div>
         </div>
@@ -92,7 +99,7 @@
                 </div>
                 <div class="col-2">
                     {% comment %} <input type="button" value="Reset" id="resetBtn" onClick="this.form.reset()" /> {% endcomment %}
-                    <button type="submit" class="btn btn-dark" name="clear_coords" >Clear</button>
+                    <button type="button" class="btn btn-dark" id="clear_coords" >Clear</button>
                 </div>
             </div>
         </div>
@@ -111,7 +118,7 @@
             <div id="Date_fields_start_end">
             <br>
                 <label for="start_date" style="font-weight: bold">Start_date:</label>
-                    {{ form.start_date }}
+                    {{ form.start_date}}
                     <br>
                 <label for="end_date" style="font-weight: bold">End_date:</label>
                     {{ form.end_date }}
@@ -129,28 +136,28 @@
             <br>
             <div class="row">
                 <div class="col-2">
-                    <button type="submit" class="btn btn-dark" name="clear_dates" style="color" >Clear</button>
+                    <button type="button" class="btn btn-dark" id="clear_dates" style="color" >Clear</button>
                 </div>
             </div>
         </div>
     <br>
     <div class="form-group mx-sm-3 mb-2">
     <br>
-    <div id="other_parameters" style="display: flex; justify-content: center; align-items: center;">
-        <div class="row" style="background-color: #B3DAFF   ; padding: 20px; border-radius: 25px;">
-            <div class="col-4" style="color: #000000; font-size: 18px;">
-                <label for="overwrite_repetitious" style="font-weight: bold">Overwrite existing images:</label>
+    <div id="other_parameters" >
+        <div class="row" style="background-color: #B3DAFF ; padding: 16px; border-radius: 25px; justify-content: center; align-items: center; margin-right: 15px;">
+            <div class="col-4" style="color: #000000; font-size: 17px;">
+                <label for="overwrite_repetitious" style="font-weight: bold">Overwrite existing images&nbsp</label>
+                {% comment %} <input class="checkbox" type="checkbox" id="overwrite_repetitious" name="overwrite_repetitious" value="{{ form.overwrite_repetitious.value|escape }}"> {% endcomment %}
                     {{ form.overwrite_repetitious }}
             </div>
-            <div class="col-4" style="color: #000000; font-size: 18px;">
-                <label for="inference" style="font-weight: bold">Apply watercraft detection</label>
+            <div class="col-4" style="color: #000000; font-size: 17px;">
+                <label for="inference" style="font-weight: bold">Apply watercraft detection&nbsp</label>
+                {% comment %} <input class="checkbox" type="checkbox" id="inference" name="inference" value="{{ form.inference.value|escape }}"> {% endcomment %}
                     {{ form.inference }}
             </div>
-            <div class="col-4" style="color: #000000; font-size: 18px;">
-                <div class="form-check form-check-inline">
-                    <label class="form-check-label" for="save_concated" style="font-weight: bold">Save concatenated inference</label>
-                    <input class="form-check-input" type="checkbox" id="save_concated" name="save_concated" value="True" checked>
-                </div>  
+            <div class="col-4" style="color: #000000; font-size: 17px;">
+                    <label class="form-check-label" for="save_concated" style="font-weight: bold">Save concatenated&nbsp</label>
+                    <input class="checkbox" type="checkbox" id="save_concated" name="save_concated" value="True" checked>
             </div>
         </div>
     </div>

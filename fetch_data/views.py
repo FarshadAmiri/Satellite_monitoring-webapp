@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 import asyncio, logging, time
 from .forms import *
-from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton
+from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
@@ -36,6 +36,7 @@ def territory_fetch(request):
                 y_max = form.cleaned_data['y_max']
                 x_range = [int(x_min), int(x_max)]
                 y_range = [int(y_min), int(y_max)]
+                lon_min, lat_min, lon_max, lat_max = xyz2bbox_territory(x_range, y_range, zoom)
             elif coordinate_type == "lonlat":
                 lon_min = form.cleaned_data['lon_min']
                 lon_max = form.cleaned_data['lon_max']
@@ -43,6 +44,7 @@ def territory_fetch(request):
                 lat_max = form.cleaned_data['lat_max']
                 coords = (lon_min, lat_min, lon_max, lat_max)
                 x_range, y_range, _ = coords_2_xyz_newton(coords, zoom)
+                (x_min, x_max), (y_min, y_max) = x_range, y_range
             if date_type == 'start_end':
                 start_date = form.cleaned_data['start_date']
                 end_date = form.cleaned_data['end_date']
@@ -54,11 +56,25 @@ def territory_fetch(request):
                 end_date = date_data['end_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             inference = form.cleaned_data['inference']
-
             territories = territory_divider(x_range, y_range, piece_size=70)
-            print("Territories: ", territories)
-            print("save_concated: ", save_concated)
+            
+            # QueuedTask
+            task_id = f"user.username-x{x_min}_{x_max}-y{y_min}_{y_max}-({start_date}_{end_date})-q_{get_current_datetime()}"
+            task_type = "fetch_infer" if inference else "fetch"
+            try:
+                area_tag = PresetArea.objects.get(lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max)
+            except PresetArea.DoesNotExist:
+                area_tag = None
+            task = QueuedTasks.objects.create(task_id=task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
+                                       lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
+                                       zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
+                                       time_from=start_date, time_to=end_date, user_queued=request.user,)
+            if area_tag != None:
+                task.area_tag=area_tag
+                task.save()
+
             for idx, territory in enumerate(territories):
+                print(territories)
                 logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
                 for sub_territory in territory:
                     x_range = sub_territory[0]
@@ -79,58 +95,29 @@ def territory_fetch(request):
         form = SentinelFetchForm(request.POST)
         if form.is_valid():
             preset_area_id = form.cleaned_data['preset_area']
+            zoom = int(form.cleaned_data['zoom'])
             preset_area = PresetArea.objects.get(tag=preset_area_id)
+            coords = [preset_area.lon_min, preset_area.lat_min, preset_area.lon_max, preset_area.lat_max]
+            lon_min, lat_min, lon_max, lat_max = coords
+            x_range, y_range, _ = coords_2_xyz_newton(coords, zoom)
+            (x_min, x_max), (y_min, y_max) = x_range, y_range
 
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
             base_date = form.cleaned_data['base_date']
             n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
+            inference = form.cleaned_data['inference']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
-            form = SentinelFetchForm(initial={"x_min": preset_area.x_min, "x_max": preset_area.x_max, "y_min": preset_area.y_min,
-                                              "y_max": preset_area.y_max,"zoom": preset_area.zoom, "lon_min": preset_area.bbox_lon1,
-                                              "lon_max": preset_area.bbox_lon2, "lat_min": preset_area.bbox_lat1,
-                                              "lat_max": preset_area.bbox_lat2, "start_date": start_date, "end_date": end_date,
+            save_concated = True if request.POST.get('save_concated') == "True" else False
+            form = SentinelFetchForm(initial={"x_min": x_min, "x_max": x_max, "y_min": y_min,
+                                              "y_max": y_max,"zoom": zoom, "lon_min": lon_min,
+                                              "lon_max": lon_max, "lat_min": lat_min,
+                                              "lat_max": lat_max, "start_date": start_date, "end_date": end_date,
                                               "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
-                                              "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area_id
+                                              "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area_id,
+                                              'inference': inference,
                                                })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
-
-    elif request.method == 'POST' and 'clear_coords' in request.POST:
-        form = SentinelFetchForm(request.POST)
-        if form.is_valid():
-            start_date = form.cleaned_data['start_date']
-            end_date = form.cleaned_data['end_date']
-            n_days_before_base_date = form.cleaned_data['n_days_before_base_date']
-            base_date = form.cleaned_data['base_date']
-            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
-            inference = form.cleaned_data['inference']
-            form = SentinelFetchForm(initial={"start_date": start_date, "end_date": end_date,
-                                            "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
-                                            "overwrite_repetitious": overwrite_repetitious, "inference": inference,
-                                                })
-        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
-                                                                        'user':request.user})
-    
-    elif request.method == 'POST' and 'clear_dates' in request.POST:
-        form = SentinelFetchForm(request.POST)
-        if form.is_valid():
-            zoom = form.cleaned_data['zoom']
-            x_min = form.cleaned_data['x_min']
-            x_max = form.cleaned_data['x_max']
-            y_min = form.cleaned_data['y_min']
-            y_max = form.cleaned_data['y_max']
-            lon_min = form.cleaned_data['lon_min']
-            lon_max = form.cleaned_data['lon_max']
-            lat_min = form.cleaned_data['lat_min']
-            lat_max = form.cleaned_data['lat_max']
-            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
-            inference = form.cleaned_data['inference']
-            form = SentinelFetchForm(initial={"zoom": zoom, "x_min": x_min, "x_max": x_max, "y_min": y_min, "y_max": y_max,
-                                              "lon_min": lon_min, "lon_max": lon_max, "lat_min": lat_min, "lat_max": lat_max,
-                                              "overwrite_repetitious": overwrite_repetitious, "inference": inference,
-                                                })
-        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
-                                                                         'user':request.user})
 
 
 def test(request):
