@@ -16,7 +16,7 @@
 {% csrf_token %}
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #DFF3FF; margin: 6px">
     <div class="col-6" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
-    <h2 style="font-weight: bold; color: #030F7F;">Coordinations</h3>
+    <h2 id="box_title">Coordinations</h2>
     <br>
     <div>
     <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
@@ -95,7 +95,7 @@
                     {{ form.preset_area }}
                 </div>
                 <div class="col-4">
-                    <button type="submit" class="btn btn-dark" name="fill_coords" style="color" >Fill coordinates</button>
+                    <button id="fill_coords" type="submit" class="btn btn-dark" name="fill_coords">Fill coordinates</button>
                 </div>
                 <div class="col-2">
                     {% comment %} <input type="button" value="Reset" id="resetBtn" onClick="this.form.reset()" /> {% endcomment %}
@@ -105,7 +105,7 @@
         </div>
     </div> 
         <div class="col-6"  style="background-color: #FFFFFF ; padding: 45px; border-radius: 25px;">
-        <h2 style="font-weight: bold; color: #030F7F;">Time interval</h3>
+        <h2 id="box_title">Time interval</h3>
         <br>
             <div>
                 <label for="date_type" style="font-weight: bold">Choose Date input Type:</label>
