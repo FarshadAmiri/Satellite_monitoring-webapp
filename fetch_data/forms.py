@@ -17,10 +17,10 @@ class SentinelFetchForm(forms.Form):
         
     preset_areas_queryset = PresetArea.objects.all().order_by('tag')
     preset_area = forms.ModelChoiceField(queryset=preset_areas_queryset, required=False)
-    x_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    x_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_min = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_max = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_min = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    x_max = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    y_min = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    y_max = forms.IntegerField(min_value=0, max_value=5000000, required=False)
     zoom = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
     lon_min = forms.FloatField(min_value=-180, max_value=180, required=False)
     lon_max = forms.FloatField(min_value=-180, max_value=180, required=False)
@@ -36,28 +36,28 @@ class SentinelFetchForm(forms.Form):
     def clean_x_min(self):
         x_min = self.cleaned_data['x_min']
         if x_min != None:
-            if x_min < 0 or x_min > 500000:
+            if x_min < 0 or x_min > 5000000:
                 raise forms.ValidationError('Invalid x_min value')
         return x_min
 
     def clean_x_max(self):
         x_max = self.cleaned_data['x_max']
         if x_max != None:
-            if x_max < 0 or x_max > 500000:
+            if x_max < 0 or x_max > 5000000:
                 raise forms.ValidationError('Invalid x_max value')
         return x_max
 
     def clean_y_min(self):
         y_min = self.cleaned_data['y_min']
         if y_min != None:
-            if y_min < 0 or y_min > 500000:
+            if y_min < 0 or y_min > 5000000:
                 raise forms.ValidationError('Invalid y_min value')
         return y_min
 
     def clean_y_max(self):
         y_max = self.cleaned_data['y_max']
         if y_max != None:
-            if y_max < 0 or y_max > 500000:
+            if y_max < 0 or y_max > 5000000:
                 raise forms.ValidationError('Invalid y_max value')
         return y_max
 
@@ -96,12 +96,11 @@ class SentinelFetchForm(forms.Form):
 class Convert2lonlatForm(forms.Form):
     
     zoom_2lonlat = forms.IntegerField(min_value=0, max_value=50, initial=14, required=False)
-    x_min_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    x_max_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_min_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
-    y_max_2lonlat = forms.IntegerField(min_value=0, max_value=500000, required=False)
+    x_min_2lonlat = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    x_max_2lonlat = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    y_min_2lonlat = forms.IntegerField(min_value=0, max_value=5000000, required=False)
+    y_max_2lonlat = forms.IntegerField(min_value=0, max_value=5000000, required=False)
     
-
 
 class Convert2xyForm(forms.Form):
     

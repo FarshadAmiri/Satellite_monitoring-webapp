@@ -9,14 +9,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-import asyncio, logging, time
+import asyncio, logging, time, datetime
 from .forms import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
 
-# @login_required(login_url='users:login', )
+@login_required(login_url='users:login')
 def territory_fetch(request):
     if request.method == 'GET':
         form = SentinelFetchForm()
@@ -58,7 +58,7 @@ def territory_fetch(request):
             inference = form.cleaned_data['inference']
             territories = territory_divider(x_range, y_range, piece_size=70)
             
-            # QueuedTask
+            # QueuedTask lines
             task_id = f"user.username-x{x_min}_{x_max}-y{y_min}_{y_max}-({start_date}_{end_date})-q_{get_current_datetime()}"
             task_type = "fetch_infer" if inference else "fetch"
             try:
@@ -72,7 +72,10 @@ def territory_fetch(request):
             if area_tag != None:
                 task.area_tag=area_tag
                 task.save()
+            ### End QueuedTask lines
 
+            n_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
+            n_queries_done = 0
             for idx, territory in enumerate(territories):
                 print(territories)
                 logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
@@ -80,7 +83,8 @@ def territory_fetch(request):
                     x_range = sub_territory[0]
                     y_range = sub_territory[1]
                     t1 = time.perf_counter()
-                    territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date,
+                    n_queries_done = territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, task=task,
+                                              n_queries_done=n_queries_done, n_total_queries=n_total_queries,
                                               overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
                     logging.info(f"{time.perf_counter() - t1} seconds to fetch this territory")   
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
@@ -118,6 +122,40 @@ def territory_fetch(request):
                                               'inference': inference,
                                                })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
+        
+    elif request.method == 'POST' and 'last_10_days' in request.POST:
+        form = SentinelFetchForm(request.POST)
+        logging.info("\n\n\n\Last 10 days form - before validation\n\n\n")
+        if form.is_valid():
+            logging.info("\n\n\n\Last 10 days form is valid\n\n\n")
+            preset_area = form.cleaned_data['preset_area']
+            zoom = form.cleaned_data['zoom']
+            lon_min = form.cleaned_data['lon_min']
+            lon_max = form.cleaned_data['lon_max']
+            lat_min = form.cleaned_data['lat_min']
+            lat_max = form.cleaned_data['lat_max']
+            x_min = form.cleaned_data['x_min']
+            x_max = form.cleaned_data['x_max']
+            y_min = form.cleaned_data['y_min']
+            y_max = form.cleaned_data['y_max']
+
+            end_date = datetime.datetime.now().date()
+            start_date = end_date - datetime.timedelta(days=10)
+            base_date = end_date
+            n_days_before_base_date = 10
+            inference = form.cleaned_data['inference']
+            overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
+            save_concated = True if request.POST.get('save_concated') == "True" else False
+            form = SentinelFetchForm(initial={"x_min": x_min, "x_max": x_max, "y_min": y_min,
+                                                "y_max": y_max,"zoom": zoom, "lon_min": lon_min,
+                                                "lon_max": lon_max, "lat_min": lat_min,
+                                                "lat_max": lat_max, "start_date": start_date, "end_date": end_date,
+                                                "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
+                                                "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area,
+                                                'inference': inference,
+                                                })
+            return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
+        logging.info("\n\n\n\Last 10 days form is not valid\n\n\n")
 
 
 def test(request):
@@ -172,7 +210,7 @@ class territory_fetch_APIView(APIView):
         return Response(data={"message": error_messages}, status=400)
     
 
-
+@login_required(login_url='users:login')
 def ConvertView(request):
     if request.method == 'GET':
         logging.info("GET 1")
@@ -222,3 +260,11 @@ def ConvertView(request):
 
             return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
             "form_2lonlat": form_2lonlat, 'convert_2xy_res': convert_2xy_res, 'user':request.user})
+
+
+@login_required(login_url='users:login')
+def MyTasksView(request):
+    if request.method=="GET" and request.user.is_authenticated:
+        user = request.user
+        tasks =  QueuedTasks.objects.filter(user_queued=user).order_by('-time_queued')
+        return render(request, "fetch_data/MyTasks.html", context={'tasks': tasks, 'user':user})

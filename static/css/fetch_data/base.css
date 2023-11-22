@@ -1,6 +1,8 @@
 body {
     background-image: url("\\static\\bcg\\earth1.jpg");
-    /* background-image: url('https://wallpapercrafter.com/th800/124985-3D-render-space-satellite-Earth-orbital-view.jpg'); Replace with the path to your background image */
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
     background-size: cover;
     background-position: center;
     /* Add other CSS properties as needed */

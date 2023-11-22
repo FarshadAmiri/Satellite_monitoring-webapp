@@ -13,26 +13,42 @@
 }
 
 .row#outer_box {
+  background-image: linear-gradient(to bottom, rgb(66, 66, 66), rgb(255, 255, 255));
   padding: 25px;
   border-radius: 25px;
-  background-color: #D9DCD2;
   margin: 6px;
  }
 
  h2#page_title {
   font-weight: bold; 
-  font-size: 38px ;
-  color: #18191a;
+  font-size: 42px ;
+  color: #ffffff;
   display: flex;
   justify-content: center;
   padding-bottom: 20px;
  }
 
- #halfbox {
-  background-color: #ECFFE0;
-  padding: 50px;
+
+ #halfbox_r {
+  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(221, 255, 215));
+  /* background-color: #FEFFE0;  */
+  padding: 45px;
   border-radius: 25px;
  }
+
+ #halfbox_l {
+  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(165, 216, 209));
+  /* background-color: #9DC8F1 ; */
+  padding: 50px;
+  border-radius: 25px;
+   }
+
+  #halfbox_title {
+    font-weight: bolder;
+    font-size: 34px;
+    color: #030F7F;
+   }
+   
 
  .variable {
   color: rgb(182, 71, 43);

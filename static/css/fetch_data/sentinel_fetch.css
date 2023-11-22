@@ -25,7 +25,7 @@ input[type=checkbox]
 
 
 #clear_coords, #clear_dates {
-  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(157, 173, 196));
+  background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(212, 212, 212));
   background-size: 100%;
   color: rgb(0, 0, 0);
   border-color: rgb(0, 0, 0);
@@ -42,4 +42,14 @@ input[type=checkbox]
   border-color: rgb(0, 0, 0);
   /* font-weight: bold; */
   font-size: 17px;
+  }
+
+
+  #last_10_days{
+    background-image: linear-gradient(to bottom, rgb(255, 255, 255), rgb(212, 212, 212));
+    background-size: 100%;
+    color: rgb(0, 0, 0);
+    border-color: rgb(0, 0, 0);
+    font-weight: bolder;
+    font-size: 16px;
   }

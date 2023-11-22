@@ -12,12 +12,12 @@
 {% block body %}
 
 <div class="container">
-    <div class="row" id="outer_box" style="padding: 25px; border-radius: 25px; background-color: #D9DCD2; margin: 6px">
+    <div class="row" id="outer_box">
         <h2 id= "page_title">Coordinations Conversion</h2>
-        <div class="col-6" id="halfbox">
+        <div class="col-6" id="halfbox_l">
             <form action="{% url 'fetch_data:conversions' %}" method="post">
             {% csrf_token %}
-            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">X, Y -> Lon, Lat</h2>
+            <h2 id="halfbox_title">X, Y -> Lon, Lat</h2>
             <br>
             <div class="row">
                 <div class="col-2">
@@ -56,11 +56,11 @@
                 </div>
                 <div class="col-2">
                     <label for="decimal_round" style="font-weight: bold;">Decimals</label>
-                    <select name="decimal_round" id="decimal_round" value="6" min="1" max="10" value="6">
+                    <select name="decimal_round" id="decimal_round" value="6" min="1" max="10">
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
-                        <option value="4">4</option>
+                        <option value="4" selected>4</option>
                         <option value="5">5</option>
                         <option value="6">6</option>
                         <option value="7">7</option>
@@ -77,10 +77,10 @@
                 </div>
             </div>
             </div>
-        <div class="col-6"  style="background-color: #FEFFE0; padding: 45px; border-radius: 25px;">
+        <div class="col-6" id="halfbox_r">
             <form action="{% url 'fetch_data:conversions' %}" method="post">
             {% csrf_token %}
-            <h2 style="font-weight: bold; font-size: 28px; color: #943BBE">Lon, Lat -> X, Y</h3>
+            <h2 id="halfbox_title">Lon, Lat -> X, Y</h3>
             <br>
             <div class="row">
                 <div class="col-2">

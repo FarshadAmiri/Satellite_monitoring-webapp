@@ -33,7 +33,7 @@ def store_image(x, y, zoom, start_date, end_date, n_days_before_date=None, date=
     image.save(image_path)
 
 
-def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious=False,
+def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task, n_queries_done, n_total_queries, overwrite_repetitious=False,
                               images_db_path=images_db_path, inference=True, save_concated=False):
     
     date_data = start_end_time_interpreter(start=start_date, end=end_date)
@@ -52,6 +52,10 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, over
         if os.path.exists(path_zx) == False:
             os.mkdir(path_zx)
         for j in tqdm(range(y_range[0], y_range[1]+1)):
+            n_queries_done += 1
+            if n_queries_done % 10 == 0:
+                task.fetch_progress = int(n_queries_done * 100 / n_total_queries)
+                task.save()
             path_zxy = os.path.join(path_zx, str(j))
             if os.path.exists(path_zxy) == False:
                 os.mkdir(path_zxy)
@@ -123,6 +127,7 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, over
                                                             time_to=end_date, confidence=confidence, length=length, object_type=object_type,
                                                             awake=awake)
         logging.info("All detected objects meta data added to DetectedObject table")
+    return n_queries_done
 
 
 

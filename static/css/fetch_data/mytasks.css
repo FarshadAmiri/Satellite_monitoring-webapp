@@ -1,0 +1,19 @@
+.details-row {
+    display: none;
+  }
+  
+.details-row.show {
+display: table-row;
+}
+
+.lonlat {
+color: rgb(182, 71, 43);
+}
+
+.indent-10 {
+    margin-left: 120px;
+}
+
+.date {
+    color: rgb(182, 71, 43);
+    }
