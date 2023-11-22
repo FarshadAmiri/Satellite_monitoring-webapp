@@ -18,20 +18,20 @@
     <div class="col-6" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
     <h2 id="box_title">Coordinations</h2>
     <br>
-    <div>
+    {% comment %} <div>
     <label for="coordinate_type" style="font-weight: bold">Choose Coordinate Type:</label>
     <select id="coordinate_type" name="coordinate_type">
     <option value="xy">x, y</option>
     <option value="lonlat" selected>Lon, Lat</option>
     </select>
-    </div>
+    </div> {% endcomment %}
     <br>
         <div id="zoom_field">
             <label for="zoom" style="font-weight: bold">Zoom:</label>
             {{ form.zoom }}
         </div>
     <br>
-        <div id="xy_fields" style="display:none;">
+        {% comment %} <div id="xy_fields" style="display:none;">
             <div class="row">
                 <div class ="col-2">
                     <label for="x_min" style="font-weight: bold">X min</label>
@@ -57,7 +57,7 @@
                     <input type="number" id="y_max" name="y_max" value="{{ form.y_max.value|escape }}">
                 </div>
             </div>
-        </div>
+        </div> {% endcomment %}
 
         <div id="lonlat_fields">
             <div class="row">

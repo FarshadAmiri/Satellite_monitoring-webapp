@@ -25,6 +25,7 @@ def territory_fetch(request):
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
         form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date, date) overwrite_repetitious, image_store_path
         coordinate_type = request.POST.get('coordinate_type')
+        coordinate_type = "lonlat" if coordinate_type == None else coordinate_type
         date_type = request.POST.get('date_type')
         save_concated = True if request.POST.get('save_concated') == "True" else False
         if form.is_valid():

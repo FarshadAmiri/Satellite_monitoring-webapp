@@ -92,9 +92,6 @@ class DetectedObject(models.Model):
     
     lon = models.FloatField()
     lat = models.FloatField()
-    x = models.IntegerField()
-    y = models.IntegerField()
-    zoom = models.IntegerField()
 
     time_from = models.DateField()
     time_to = models.DateField()
