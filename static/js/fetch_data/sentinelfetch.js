@@ -1,15 +1,15 @@
-document.getElementById("coordinate_type").addEventListener("change", function() {
-var xyFields = document.getElementById("xy_fields");
-var lonlatFields = document.getElementById("lonlat_fields");
+// document.getElementById("coordinate_type").addEventListener("change", function() {
+// var xyFields = document.getElementById("xy_fields");
+// var lonlatFields = document.getElementById("lonlat_fields");
 
-if (this.value === "xy") {
-    xyFields.style.display = "block";
-    lonlatFields.style.display = "none";
-} else if (this.value === "lonlat") {
-    xyFields.style.display = "none";
-    lonlatFields.style.display = "block";
-}
-});
+// if (this.value === "xy") {
+//     xyFields.style.display = "block";
+//     lonlatFields.style.display = "none";
+// } else if (this.value === "lonlat") {
+//     xyFields.style.display = "none";
+//     lonlatFields.style.display = "block";
+// }
+// });
 
 document.getElementById("date_type").addEventListener("change", function() {
 var start_endFields = document.getElementById("Date_fields_start_end");

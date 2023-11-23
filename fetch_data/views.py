@@ -9,18 +9,40 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from django.contrib import auth
 import asyncio, logging, time, datetime
+from asgiref.sync import sync_to_async
+from celery import shared_task
 from .forms import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
 
+# @shared_task
+async def fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id, overwrite_repetitious, inference, save_concated):
+    n_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
+    n_queries_done = 0
+    for idx, territory in enumerate(territories):
+        logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
+        for sub_territory in territory:
+            x_range = sub_territory[0]
+            y_range = sub_territory[1]
+            t1 = time.perf_counter()
+            n_queries_done = territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, task_id=task_id,
+                                    n_queries_done=n_queries_done, n_total_queries=n_total_queries,
+                                    overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+            logging.info(f"{time.perf_counter() - t1} seconds to fetch this territory")
+
 @login_required(login_url='users:login')
-def territory_fetch(request):
+async def territory_fetch(request):
+    user = await sync_to_async(auth.get_user)(request)    
     if request.method == 'GET':
         form = SentinelFetchForm()
-        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,'user':request.user})
+        return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form,
+                                                                        #  'user':request.user,
+                                                                         'user': user,
+                                                                         })
 
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
         form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date, date) overwrite_repetitious, image_store_path
@@ -58,9 +80,10 @@ def territory_fetch(request):
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             inference = form.cleaned_data['inference']
             territories = territory_divider(x_range, y_range, piece_size=70)
-            
+            logging.info(f"\nterritories:\n{territories}\n")
+
             # QueuedTask lines
-            task_id = f"user.username-x{x_min}_{x_max}-y{y_min}_{y_max}-({start_date}_{end_date})-q_{get_current_datetime()}"
+            task_id = f"user.username-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
             task_type = "fetch_infer" if inference else "fetch"
             try:
                 area_tag = PresetArea.objects.get(lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max)
@@ -74,20 +97,32 @@ def territory_fetch(request):
                 task.area_tag=area_tag
                 task.save()
             ### End QueuedTask lines
+            await fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
+            overwrite_repetitious, inference, save_concated)
 
-            n_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
-            n_queries_done = 0
-            for idx, territory in enumerate(territories):
-                print(territories)
-                logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
-                for sub_territory in territory:
-                    x_range = sub_territory[0]
-                    y_range = sub_territory[1]
-                    t1 = time.perf_counter()
-                    n_queries_done = territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, task=task,
-                                              n_queries_done=n_queries_done, n_total_queries=n_total_queries,
-                                              overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
-                    logging.info(f"{time.perf_counter() - t1} seconds to fetch this territory")   
+            # loop = asyncio.get_event_loop()
+            # task = loop.create_task(fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id, overwrite_repetitious, inference, save_concated))
+            # await task
+            
+            # fetch.delay(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
+                        # overwrite_repetitious, inference, save_concated)
+            
+            # await fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
+            # overwrite_repetitious, inference, save_concated)
+
+            # n_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
+            # n_queries_done = 0
+            # for idx, territory in enumerate(territories):
+            #     print(territories)
+            #     logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
+            #     for sub_territory in territory:
+            #         x_range = sub_territory[0]
+            #         y_range = sub_territory[1]
+            #         t1 = time.perf_counter()
+            #         n_queries_done = territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, task_id=task_id,
+            #                                 n_queries_done=n_queries_done, n_total_queries=n_total_queries,
+            #                                 overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+            #         logging.info(f"{time.perf_counter() - t1} seconds to fetch this territory")        
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
             return render(request, "fetch_data/error.html", context={'errors': form.errors})

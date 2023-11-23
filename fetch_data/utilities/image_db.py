@@ -7,7 +7,7 @@ import numpy as np
 from .sentinel_api import sentinel_query
 from .tools import start_end_time_interpreter, xyz2bbox, xyz2bbox_territory, coords_in_a_xyz, image_dir_in_image_db, coords_2_xyz_newton
 from .inference_modular import ship_detection
-from fetch_data.models import SatteliteImage, DetectedObject, WaterCraft
+from fetch_data.models import SatteliteImage, DetectedObject, WaterCraft, QueuedTasks
 
 images_db_path = r"D:\SatteliteImages_db"
 model_path = r"D:\NLP 1\Sattelite_monitoring-web\fetch_data\utilities\inference_models\best_model.pth"
@@ -33,9 +33,10 @@ def store_image(x, y, zoom, start_date, end_date, n_days_before_date=None, date=
     image.save(image_path)
 
 
-def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task, n_queries_done, n_total_queries, overwrite_repetitious=False,
+def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task_id, n_queries_done, n_total_queries, overwrite_repetitious=False,
                               images_db_path=images_db_path, inference=True, save_concated=False):
     
+    task = QueuedTasks.objects.get(task_id=task_id)
     date_data = start_end_time_interpreter(start=start_date, end=end_date)
     start_date, start_formatted = date_data["start_date"], date_data["start_formatted"]
     end_date, end_formatted = date_data["end_date"], date_data["end_formatted"]
