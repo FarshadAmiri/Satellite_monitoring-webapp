@@ -31,11 +31,11 @@ class PresetArea(models.Model):
     def __str__(self):
         return self.tag
 
-    # def x_range(self):
-    #     return f"{self.x_min:.0f} : {self.x_max:.0f}"
+    def x_range_z14(self):
+        return (int(self.x_min_z14), int(self.x_max_z14))
     
-    # def y_range(self):
-    #     return f"{self.y_min:.0f} : {self.y_max:.0f}"
+    def y_range_z14(self):
+        return (int(self.y_min_z14), int(self.y_max_z14))
     
     def wgs84_coords(self):
         try:
