@@ -112,14 +112,16 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
                     # object_type = WaterCraft.objects.get(name=watercraft_name)
 
                     object_type = WaterCraft.objects.get(name="Unknown")   # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    awake = True                                     # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    # awake = True                                     # !!!!!!!!!!!!!!!!!!!  DEBUG MODE  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
                     obj_id = f"x{x}_y{y}_z{zoom}_({timestamp})_{obj}"
                     image_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path)
                     source_img = SatteliteImage.objects.get(image_path=img_path)
                     DetectedObject.objects.update_or_create(id=obj_id, task=task, image=source_img, lon=lon, lat=lat, time_from=start_date,
                                                             time_to=end_date, confidence=confidence, length=length, object_type=object_type,
-                                                            awake=awake)
+                                                            # awake=awake
+                                                            )
+                    # detected_obj= DetectedObject.objects.update_or_create(id=obj_id)
         logging.info("All detected objects meta data added to DetectedObject table")
         
         task.task_status = "inferenced"
