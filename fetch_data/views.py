@@ -125,8 +125,11 @@ def territory_fetch(request):
             preset_area = PresetArea.objects.get(tag=preset_area_id)
             coords = [preset_area.lon_min, preset_area.lat_min, preset_area.lon_max, preset_area.lat_max]
             lon_min, lat_min, lon_max, lat_max = coords
-            x_range, y_range, _ = coords_2_xyz_newton(coords, zoom)
-            (x_min, x_max), (y_min, y_max) = x_range, y_range
+            if zoom == 14:
+                (x_min, x_max), (y_min, y_max) = (preset_area.x_min_z14, preset_area.x_max_z14) ,(preset_area.y_min_z14, preset_area.y_max_z14)
+            else:
+                x_range, y_range, _ = coords_2_xyz_newton(coords, zoom)
+                (x_min, x_max), (y_min, y_max) = x_range, y_range
 
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']

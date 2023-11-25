@@ -27,10 +27,10 @@ if (this.value === "start_end") {
 
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('clear_coords').addEventListener('click', function() {
-        document.getElementById('x_min').value = '';
-        document.getElementById('x_max').value = '';
-        document.getElementById('y_min').value = '';
-        document.getElementById('y_max').value = '';
+        // document.getElementById('x_min').value = '';
+        // document.getElementById('x_max').value = '';
+        // document.getElementById('y_min').value = '';
+        // document.getElementById('y_max').value = '';
         document.getElementById('lon_min').value = '';
         document.getElementById('lon_max').value = '';
         document.getElementById('lat_min').value = '';

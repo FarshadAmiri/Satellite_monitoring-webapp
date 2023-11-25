@@ -24,7 +24,7 @@ class PresetAreasAdmin(admin.ModelAdmin):
     ordering = ['tag']
     search_fields = ["tag", "lon_min", "lon_max", "lat_min", "lat_max"]
     # list_editable = ['tag',]
-    readonly_fields = ["area", "width", "height", "wgs84_coords"]
+    readonly_fields = ["area", "width", "height", "wgs84_coords", "x_min_z14", "x_max_z14", "y_min_z14", "y_max_z14"]
     # date_hierarchy = 'datetime'
 
     fieldsets = (
@@ -33,7 +33,10 @@ class PresetAreasAdmin(admin.ModelAdmin):
         }),
         ("Area specifications", {
             "fields" :("area", "width", "height")
-        })
+        }), 
+        ("X, Y, Zoom: 14", {
+            "fields": ("x_min_z14", "x_max_z14", "y_min_z14", "y_max_z14")
+        }),
         # ('More info' , {
         #     'classes':('collapse',), 'fields':('description')
         # }),

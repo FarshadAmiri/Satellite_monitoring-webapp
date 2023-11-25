@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from users.models import User
-from fetch_data.utilities.tools import xyz2bbox_territory, bbox_geometry_calculator
+from fetch_data.utilities.tools import xyz2bbox_territory, bbox_geometry_calculator, coords_2_xyz_newton
 
 class PresetArea(models.Model):
     lon_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
@@ -13,11 +13,19 @@ class PresetArea(models.Model):
     height = models.IntegerField(null=True, blank=True,)
     area = models.BigIntegerField(null=True, blank=True,)
 
+    x_min_z14 = models.IntegerField(null=True, blank=True,)
+    x_max_z14 = models.IntegerField(null=True, blank=True,)
+    y_min_z14 = models.IntegerField(null=True, blank=True,)
+    y_max_z14 = models.IntegerField(null=True, blank=True,)
+
     tag = models.CharField(max_length=128, primary_key=True,)
     description = models.TextField(max_length=800, null=True, blank=True,)
     
     def save(self, *args, **kwargs):
-        self.width, self.height, self.area = list(map(int, bbox_geometry_calculator((self.lon_min, self.lat_min, self.lon_max, self.lat_max))))
+        coords = (self.lon_min, self.lat_min, self.lon_max, self.lat_max)
+        self.width, self.height, self.area = list(map(int, bbox_geometry_calculator(coords)))
+        x_range_z14, y_range_z14, _ = coords_2_xyz_newton(coords, 14)
+        (self.x_min_z14, self.x_max_z14), (self.y_min_z14, self.y_max_z14) = x_range_z14, y_range_z14
         super(PresetArea, self).save(*args, **kwargs)
 
     def __str__(self):
