@@ -82,13 +82,13 @@ def territory_fetch(request):
             logging.info(f"\nterritories:\n{territories}\n")
 
             # QueuedTask lines
-            task_id = f"user.username-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
+            task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
             task_type = "fetch_infer" if inference else "fetch"
             try:
                 area_tag = PresetArea.objects.get(lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max)
             except PresetArea.DoesNotExist:
                 area_tag = None
-            task = QueuedTasks.objects.create(task_id=task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
+            task = QueuedTask.objects.create(task_id=task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
                                        lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
                                        zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
                                        time_from=start_date, time_to=end_date, user_queued=request.user,)
@@ -289,7 +289,24 @@ def ConvertView(request):
 
 @login_required(login_url='users:login')
 def MyTasksView(request):
+    user = request.user
     if request.method=="GET" and request.user.is_authenticated:
-        user = request.user
-        tasks =  QueuedTasks.objects.filter(user_queued=user).order_by('-time_queued')
-        return render(request, "fetch_data/MyTasks.html", context={'tasks': tasks, 'user':user})
+        tasks =  QueuedTask.objects.filter(user_queued=user).order_by('-time_queued')
+        return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user})
+    
+
+@login_required(login_url='users:login')
+def AllTasksView(request):
+    user = request.user
+    if request.method=="GET" and request.user.is_authenticated:
+        tasks =  QueuedTask.objects.all().order_by('-time_queued')
+        return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user, 'all_tasks': True})
+    
+
+@login_required(login_url='users:login')
+def TaskResult(request, task_id):
+    user = request.user
+    if request.method=="GET" and request.user.is_authenticated:
+        task = QueuedTask.objects.get(task_id=task_id)
+        detected_objects = task.detected_objects.all().order_by('-confidence')
+        return render(request, "fetch_data/Task_Result.html", context={'task': task, 'objects': detected_objects, 'user':user})

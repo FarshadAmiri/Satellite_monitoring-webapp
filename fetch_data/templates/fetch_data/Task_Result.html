@@ -1,0 +1,58 @@
+{% extends "fetch_data\base.html" %}
+{% load static %}
+
+{% block head-static %}
+<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/my_or_all_fetches.css' %}">
+{% endblock %}
+
+{% block body %}
+
+<div class="container">
+<div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
+    <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
+        <h5 style="background-color: #ffffff ; padding-bottom: 10px; border-radius: 25px;">Click on the row to see fetch parameters</h5>
+        <table class="table">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">watercraft type</th>
+                <th scope="col">Length</th>
+                <th scope="col">Awake</th>
+                <th scope="col">confidence</th>
+                <th scope="col">Lon</th>
+                <th scope="col">Lat</th>
+                <th scope="col">Image</th>
+            </tr>
+            </thead>
+            {% for obj in objects %}
+            <tr data-toggle="collapse" data-target=".details-row">
+                <td>{{ forloop.counter }}</td>
+                <td>{{ obj.object_type }}</td>
+                <td>{{ obj.length }}</td>
+                <td>{{ obj.awake }}</td>
+                <td>{{ obj.confidence }}</td>
+                <td>{{ obj.lon }}</td>
+                <td>{{ obj.lat }}</td>
+                <td>{{ obj.image }}</td>
+
+                <td>{{ task.fetch_progress }}%</td>
+                <td>{{ task.time_queued }}</td>
+            </tr>
+            <tr class="collapse details-row">
+            <td colspan="5">
+                <div class="details-content">
+                    <p>X: <span class="lonlat">{{obj.image__x}}</span>
+                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Y: <span class="lonlat">{{obj.image__y}}</span>
+                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Zoom: <span class="lonlat">{{obj.image__zoom}}</span>
+                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{{obj.image__area_tag}}</span>
+                    </p>
+                </div>
+            </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -70,7 +70,7 @@ class SatteliteImage(models.Model):
     y = models.FloatField(null=True, blank=True)
     zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
 
-    Area_tag = models.ForeignKey(PresetArea, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
+    area_tag = models.ForeignKey(PresetArea, related_name='area_tag', on_delete=models.SET_NULL, null=True, blank=True)
     
     time_from = models.DateField(null=True)
     time_to = models.DateField(null=True)
@@ -92,24 +92,6 @@ class SatteliteImage(models.Model):
 
     def wgs84_coords(self):
         return f"{self.bbox_lon1:.6f}, {self.bbox_lat1:.6f}, {self.bbox_lon2:.6f}, {self.bbox_lat2:.6f}"
-
-
-class DetectedObject(models.Model):
-    id = models.CharField(primary_key=True, max_length=128)
-    image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
-    
-    lon = models.FloatField()
-    lat = models.FloatField()
-
-    time_from = models.DateField()
-    time_to = models.DateField()
-    object_type = models.ForeignKey(WaterCraft, null=True, related_name="detected_objects", on_delete=models.CASCADE)
-    confidence = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)])
-    length = models.FloatField(null=True, blank=True)
-    awake = models.BooleanField(null=True)
-
-    def __str__(self):
-        return f'{self.id}'
     
 
 class CoordsMap(models.Model):
@@ -127,7 +109,7 @@ class CoordsMap(models.Model):
         return f'x: {self.x}, y: {self.y}, zoom: {self.zoom}'
 
 
-class QueuedTasks(models.Model):
+class QueuedTask(models.Model):
     TASK_TYPES = [('fetch', 'fetch'), ('infer', 'inference'), ('fetch_infer', 'fetch_and_inference')]
     TASK_STATUS = [('fetching', 'fetch_in_progress'), ('fetched', 'fetched'), ('inferencing', 'inference_in_progress'), ('inferenced', 'inferenced')]
 
@@ -154,3 +136,22 @@ class QueuedTasks(models.Model):
 
     time_queued = models.DateTimeField(auto_now_add=True)
     task_description = models.CharField(max_length=256)
+
+
+class DetectedObject(models.Model):
+    id = models.CharField(primary_key=True, max_length=128)
+    task = models.ForeignKey(QueuedTask, blank=True, null=True, related_name="detected_objects", on_delete=models.DO_NOTHING)
+    image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
+    
+    lon = models.FloatField()
+    lat = models.FloatField()
+
+    time_from = models.DateField()
+    time_to = models.DateField()
+    object_type = models.ForeignKey(WaterCraft, null=True, related_name="detected_objects", on_delete=models.CASCADE)
+    confidence = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)])
+    length = models.FloatField(null=True, blank=True)
+    awake = models.BooleanField(null=True)
+
+    def __str__(self):
+        return f'{self.id}'

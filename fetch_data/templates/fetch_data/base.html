@@ -21,9 +21,9 @@
     </style>
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
-            <a class="navbar-brand" id="nav_item" href="{% url 'fetch_data:SentinelFetch' %}" style="font-weight: bold; font-size: 27px">
+            <a class="navbar-brand logo" id="nav_item" href="{% url 'fetch_data:SentinelFetch' %}" style="font-weight: bold; font-size: 27px">
             OceanEye
-            <img src="static\bcg\logo1.png" alt="" width="54" height="30" class="d-inline-block align-text-bottom">
+            <img id="logo" width="54" height="30" class="d-inline-block align-text-bottom">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -52,7 +52,10 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item" >
-                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:mytasks' %}">My Fetches</a>
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:allfetches' %}">All Fetches</a>
+                    </li>
+                    <li class="nav-item" >
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:myfetches' %}">My Fetches</a>
                     </li>
                     <li class="nav-item">
                         {% if not request.user.is_authenticated %}

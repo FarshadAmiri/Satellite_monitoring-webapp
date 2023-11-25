@@ -56,7 +56,7 @@ class PresetAreasAdmin(admin.ModelAdmin):
 
 @admin.register(SatteliteImage)
 class SatteliteImageAdmin(admin.ModelAdmin):
-    list_display = ["time_from","time_to", 'x','y','zoom', "Area_tag", "image_path", "date_fetched"]
+    list_display = ["time_from","time_to", 'x','y','zoom', "area_tag", "image_path", "date_fetched"]
     list_display_links = ['image_path',]
     ordering = ['date_fetched']
     list_filter = [('zoom', custom_titled_filter('zoom')), ('date_fetched', custom_titled_filter('date_fetched')),
@@ -68,7 +68,7 @@ class SatteliteImageAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ("Area specifications", {
-            "fields": (("Area_tag", "zoom"), ("x", "y"))
+            "fields": (("area_tag", "zoom"), ("x", "y"))
         }),
         ("Time specifications", {
             "fields": ("time_from", "time_to")

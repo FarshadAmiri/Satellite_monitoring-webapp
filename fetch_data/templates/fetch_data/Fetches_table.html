@@ -1,30 +1,38 @@
-{% extends "fetch_data\base.html" %}
+{% extends "fetch_data\\base.html" %}
 {% load static %}
 
 {% block head-static %}
 <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/fetch_data/mytasks.js' %}"></script>
-<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/mytasks.css' %}">
+<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/my_or_all_fetches.css' %}">
 {% endblock %}
 
 {% block body %}
 
 <div class="container">
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
-    <div class="col-12" style="background-color: #ffffff ; padding: 50px; border-radius: 25px;">
+    <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
+        <h5 style="background-color: #ffffff ; padding-bottom: 10px; border-radius: 25px;">Click on the row to see fetch parameters</h5>
         <table class="table">
             <thead>
             <tr>
                 <th scope="col">#</th>
+                {% if all_tasks %}
+                    <th scope="col">Queried by</th>
+                {% endif %}
                 <th scope="col">Type</th>
                 <th scope="col">Status</th>
                 <th scope="col">Progress</th>
                 <th scope="col">Request time</th>
+                <th scope="col">Result</th>
             </tr>
             </thead>
             {% for task in tasks %}
             <tr data-toggle="collapse" data-target=".details-row">
                 <td>{{ forloop.counter }}</td>
+                {% if all_tasks %}
+                    <td>{{task.user_queued}}</td>
+                {% endif %}
                 {% if task.task_type == "fetch" %}
                     <td>Fetch</td>
                 {% elif task.task_type == "fetch_infer" %}
@@ -45,6 +53,7 @@
 
                 <td>{{ task.fetch_progress }}%</td>
                 <td>{{ task.time_queued }}</td>
+                <td><a href="{% url 'fetch_data:task_result' task.task_id %}">Result</a></td>
             </tr>
             <tr class="collapse details-row">
             <td colspan="5">

@@ -141,7 +141,9 @@ def bbox2xyz(bbox_coords):
 def xyz2bbox_territory(x_range, y_range, zoom):
     lonmin, _, _, latmax = xyz2bbox((x_range[0], y_range[0], zoom))
     _, latmin, lonmax, _ = xyz2bbox((x_range[1], y_range[1], zoom))
-    coords = (lonmin, latmin, lonmax, latmax)
+    lon_min, lon_max = min(lonmin,lonmax), max(lonmin,lonmax)
+    lat_min, lat_max = min(latmin,latmax), max(latmin,latmax)
+    coords = (lon_min, lat_min, lon_max, lat_max)
     return coords
 
 
@@ -228,9 +230,8 @@ def territory_divider(x_range, y_range, piece_size=70):
 
 def coords_in_a_xyz(lon_lat, xyz):
     lon, lat = lon_lat
-    x, y, z = xyz
     lonmin, latmin, lonmax, latmax = xyz2bbox(xyz)
-    if (lon >= lonmin) and (lon <= lonmax) and (lat >= latmin) and (lat <= latmax):
+    if (lon >= lonmin) and (lon < lonmax) and (lat >= latmin) and (lat < latmax):
         return True
     return False
 

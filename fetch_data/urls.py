@@ -7,7 +7,9 @@ urlpatterns = [
     path('', territory_fetch, name='SentinelFetch'),
     path('bbox-fetch', territory_fetch, name='SentinelFetch-bbox'),
     path('conversions', ConvertView, name='conversions'),
-    path('mytasks', MyTasksView, name="mytasks"),
+    path('myfetches', MyTasksView, name="myfetches"),
+    path('allfetches', AllTasksView, name="allfetches"),
+    path('task_result/taski?<str:task_id>', TaskResult, name="task_result"),
     path('test', test, name='test'),
-    path("api-territory_fetch", territory_fetch_APIView.as_view())
+    path("api-territory_fetch", territory_fetch_APIView.as_view()),
 ]
