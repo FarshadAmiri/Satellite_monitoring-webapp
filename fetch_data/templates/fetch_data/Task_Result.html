@@ -1,5 +1,6 @@
 {% extends "fetch_data\base.html" %}
 {% load static %}
+{% load mathfilters %}
 
 {% block head-static %}
 <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
@@ -12,15 +13,19 @@
 <div class="container">
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
-        <h5 style="background-color: #ffffff ; padding-bottom: 10px; border-radius: 25px;">Click on the row to see fetch parameters</h5>
+        <p>This fetch reuested by <span class="username">@{{ task.user_queued}}</span> at <span class="info">{{ task.time_queued }}</span>
+        &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{{task.area_tag}}</span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min }}</span> to <span class="lonlat">{{ task.lon_max }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min }}</span> to <span class="lonlat">{{ task.lat_max }}</span>
+        </p>
+        <p>Fetch progress: {{ task.fetch_progress }}%</p>
+        <p id="guide">*Click on the row to see fetch parameters</p>
         <table class="table">
             <thead>
             <tr>
                 <th scope="col">#</th>
-                <th scope="col">watercraft type</th>
+                <th scope="col">Watercraft type</th>
                 <th scope="col">Length</th>
                 <th scope="col">Awake</th>
-                <th scope="col">confidence</th>
+                <th scope="col">Confidence</th>
                 <th scope="col">Lon</th>
                 <th scope="col">Lat</th>
                 <th scope="col">Image</th>
@@ -32,13 +37,10 @@
                 <td>{{ obj.object_type }}</td>
                 <td>{{ obj.length }}</td>
                 <td>{{ obj.awake }}</td>
-                <td>{{ obj.confidence }}</td>
-                <td>{{ obj.lon }}</td>
-                <td>{{ obj.lat }}</td>
+                <td>{{ obj.confidence|mul:100|floatformat:1 }}%</td>
+                <td>{{ obj.lon|floatformat:6}}</td>
+                <td>{{ obj.lat|floatformat:6 }}</td>
                 <td>{{ obj.image }}</td>
-
-                <td>{{ task.fetch_progress }}%</td>
-                <td>{{ task.time_queued }}</td>
             </tr>
             <tr class="collapse details-row">
             <td colspan="5">

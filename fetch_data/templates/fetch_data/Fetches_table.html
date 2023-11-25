@@ -12,7 +12,7 @@
 <div class="container">
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
-        <h5 style="background-color: #ffffff ; padding-bottom: 10px; border-radius: 25px;">Click on the row to see fetch parameters</h5>
+        <p id="guide">*Click on the row to see fetch parameters</p>
         <table class="table">
             <thead>
             <tr>
@@ -20,6 +20,7 @@
                 {% if all_tasks %}
                     <th scope="col">Queried by</th>
                 {% endif %}
+                <th scope="col">Area tag</th>
                 <th scope="col">Type</th>
                 <th scope="col">Status</th>
                 <th scope="col">Progress</th>
@@ -31,8 +32,9 @@
             <tr data-toggle="collapse" data-target=".details-row">
                 <td>{{ forloop.counter }}</td>
                 {% if all_tasks %}
-                    <td>{{task.user_queued}}</td>
+                    <td class="username">@{{task.user_queued}}</td>
                 {% endif %}
+                <td class="info">{{task.area_tag}}</td>
                 {% if task.task_type == "fetch" %}
                     <td>Fetch</td>
                 {% elif task.task_type == "fetch_infer" %}
@@ -64,7 +66,7 @@
                     &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp From <span class="date">{{task.time_from}}</span> to <span class="date">{{task.time_to}}</span>
                     </p>
                     <p>Lat:  <span class="lonlat">{{task.lat_min|floatformat:4}}</span>  to <span class="lonlat">{{task.lat_max|floatformat:4}}</span>
-                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Y: <span class="lonlat">{{task.y_min}}</span> to <span class="lonlat">{{task.y_max}}</span>
+                    &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Y: <span class="lonlat">{{task.y_min}}</span> to <span class="lonlat">{{task.y_max}}</span>
                     </p>
                 </div>
             </td>

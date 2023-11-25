@@ -17,3 +17,15 @@ color: rgb(182, 71, 43);
 .date {
     color: rgb(182, 71, 43);
     }
+
+.info {
+color: rgb(182, 71, 43);
+font-size: 17px;
+font-weight: normal;
+}
+
+.username {
+  color: rgb(58, 60, 219);
+  font-size: 17px;
+  font-weight: bold;
+  }
