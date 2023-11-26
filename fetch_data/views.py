@@ -14,25 +14,54 @@ import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
 from .forms import *
-from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime
+from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime, territory_tags
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
 
 # @shared_task
-def fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id, overwrite_repetitious, inference, save_concated):
-    n_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
-    n_queries_done = 0
+def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated, lon_min, lat_min, lon_max, lat_max, user):
+    (x_min, x_max), (y_min, y_max) = x_range, y_range
+    parent_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
+    parent_queries_done = 0
+
+    territories = territory_divider(x_range, y_range, piece_size=70, flattened=True)
+    logging.info(f"\nterritories:\n{territories}\n")
+
+    parent_task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
+    task_ids = [f"{parent_task_id}_part{i+1}" for i in range(len(territories))]
+    task_type = "fetch_infer" if inference else "fetch"
+
+    task_parent = QueuedTask.objects.create(task_id=parent_task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
+                           lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
+                           zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
+                           time_from=start_date, time_to=end_date, user_queued=user,)
+    task_parent.save()
+
     for idx, territory in enumerate(territories):
         logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
-        for sub_territory in territory:
-            x_range = sub_territory[0]
-            y_range = sub_territory[1]
-            t1 = time.perf_counter()
-            n_queries_done = territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, task_id=task_id,
-                                    n_queries_done=n_queries_done, n_total_queries=n_total_queries,
-                                    overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
-            logging.info(f"{time.perf_counter() - t1} seconds to fetch this territory")
+        x_range_child = territory[0]
+        y_range_child = territory[1]
+        territory_coords = xyz2bbox_territory(x_range, y_range, zoom)
+        lon_min_child, lat_min_child, lon_max_child, lat_max_child = territory_coords
+
+        area_tags = territory_tags(territory_coords)
+        child_task_id = task_ids[idx]
+        child_task = QueuedTask.objects.create(task_id=child_task_id, parent_task_id=parent_task_id, task_type=task_type, task_status="fetching",
+                                               fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
+                                               lat_max=lat_max_child, zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
+                                               time_from=start_date, time_to=end_date, user_queued=user,)
+        for tag in area_tags:
+            area = PresetArea.objects.get(tag=tag)
+            child_task.area_tag.add(area)
+            child_task.save()
+
+        t1 = time.perf_counter()
+        parent_queries_done = territory_fetch_inference(x_range_child, y_range_child, zoom, start_date=start_date, end_date=end_date, child_task_id=child_task_id,
+                                parent_task_id= parent_task_id, parent_queries_done=parent_queries_done, parent_total_queries=parent_total_queries,
+                                overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+        logging.info(f"{(time.perf_counter() - t1):.0f} seconds to fetch this territory")
+    return
 
 
 @login_required(login_url='users:login')
@@ -44,7 +73,7 @@ def territory_fetch(request):
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form, 'user': user})
 
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
-        form = SentinelFetchForm(request.POST)  # x_min, x_max, y_min, y_max, zoom, (start, end, n_days_before_date, date) overwrite_repetitious, image_store_path
+        form = SentinelFetchForm(request.POST)
         coordinate_type = request.POST.get('coordinate_type')
         coordinate_type = "lonlat" if coordinate_type == None else coordinate_type
         date_type = request.POST.get('date_type')
@@ -78,26 +107,30 @@ def territory_fetch(request):
                 end_date = date_data['end_date']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             inference = form.cleaned_data['inference']
-            territories = territory_divider(x_range, y_range, piece_size=70)
-            logging.info(f"\nterritories:\n{territories}\n")
+            # territories = territory_divider(x_range, y_range, piece_size=70)
+            # logging.info(f"\nterritories:\n{territories}\n")
 
             # QueuedTask lines
-            task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
-            task_type = "fetch_infer" if inference else "fetch"
-            try:
-                area_tag = PresetArea.objects.get(lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max)
-            except PresetArea.DoesNotExist:
-                area_tag = None
-            task = QueuedTask.objects.create(task_id=task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
-                                       lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
-                                       zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                                       time_from=start_date, time_to=end_date, user_queued=request.user,)
-            if area_tag != None:
-                task.area_tag=area_tag
-                task.save()
+            # task_id_base = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
+            # task_ids = [f"{task_id_base}_part{i+1}" for i in range(len(territories))]
+            # task_type = "fetch_infer" if inference else "fetch"
+            # try:
+            #     area_tag = PresetArea.objects.get(lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max)
+            # except PresetArea.DoesNotExist:
+            #     area_tag = None
+            # task = QueuedTask.objects.create(task_id=task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
+            #                            lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
+            #                            zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
+            #                            time_from=start_date, time_to=end_date, user_queued=request.user,)
+            # if area_tag != None:
+            #     task.area_tag=area_tag
+            #     task.save()
             ### End QueuedTask lines
-            fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
-            overwrite_repetitious, inference, save_concated)
+            # fetch(territories, task_ids, task_type, x_min, x_max, y_min, y_max, zoom, start_date, end_date,
+            #       overwrite_repetitious, inference, save_concated, lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max,)
+            
+            fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated,
+                  lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, user=user)
 
             # loop = asyncio.get_event_loop()
             # async_task = loop.create_task(fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id, overwrite_repetitious, inference, save_concated))

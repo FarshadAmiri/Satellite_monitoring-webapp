@@ -198,7 +198,7 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
 
 
 
-def territory_divider(x_range, y_range, piece_size=70):
+def territory_divider(x_range, y_range, piece_size=70, flattened=False):
     x_min_ref , x_max_ref, y_min_ref, y_max_ref = min(x_range), max(x_range), min(y_range), max(y_range)
     x_length = x_max_ref - x_min_ref
     y_length = y_max_ref - y_min_ref
@@ -225,6 +225,9 @@ def territory_divider(x_range, y_range, piece_size=70):
             x_max = x_max_ref if (w_partition == x_no_steps - 1) else (x_min + x_pieces_opt)
             territories_row.append([(x_min, x_max) , (y_min, y_max)])
         territories.append(territories_row)
+    
+    if flattened:
+        territories = [item for sublist in territories for item in sublist]
     return territories
 
 
@@ -320,3 +323,18 @@ def coords_2_xyz_newton(coords, zoom):
     
     logging.info(f'coordinations: [{lon1}, {lat1}, {lon2}, {lat2}]\nx_range, y_range, zoom: {result}')
     return result
+
+
+def territory_tags(territory_coords):
+    from fetch_data.models import PresetArea
+
+    lon_min, lat_min, lon_max, lat_max = territory_coords
+    areas = PresetArea.objects.all()
+    tags = []
+    for area in areas:
+        lon_min_area, lon_max_area = area.lon_min, area.lon_max
+        lat_min_area, lat_max_area = area.lat_min, area.lat_max
+
+        if (lon_min <= lon_min_area) and (lon_max >= lon_max_area) and (lat_min <= lat_min_area) and (lat_max >= lat_max_area):
+            tags.append(area.tag)
+    return tags

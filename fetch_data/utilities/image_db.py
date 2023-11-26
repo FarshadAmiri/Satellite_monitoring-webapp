@@ -33,10 +33,15 @@ def store_image(x, y, zoom, start_date, end_date, n_days_before_date=None, date=
     image.save(image_path)
 
 
-def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task_id, n_queries_done, n_total_queries, overwrite_repetitious=False,
-                              images_db_path=images_db_path, inference=True, save_concated=False):
+def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, child_task_id, parent_task_id, parent_queries_done, parent_total_queries,
+                              overwrite_repetitious=False, images_db_path=images_db_path, inference=True, save_concated=False):
     
-    task = QueuedTask.objects.get(task_id=task_id)
+    child_task = QueuedTask.objects.get(task_id=child_task_id)
+    parent_task = QueuedTask.objects.get(task_id=parent_task_id)
+    child_total_queries = (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1)
+    child_queries_done = 0
+
+
     date_data = start_end_time_interpreter(start=start_date, end=end_date)
     start_date, start_formatted = date_data["start_date"], date_data["start_formatted"]
     end_date, end_formatted = date_data["end_date"], date_data["end_formatted"]
@@ -53,10 +58,12 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
         if os.path.exists(path_zx) == False:
             os.mkdir(path_zx)
         for j in tqdm(range(y_range[0], y_range[1]+1)):
-            n_queries_done += 1
-            if (n_queries_done % 10 == 0) or (n_queries_done == n_total_queries):
-                task.fetch_progress = int(n_queries_done * 100 / n_total_queries)
-                task.save()
+            child_queries_done += 1
+            if (child_queries_done % 10 == 0) or (child_queries_done == child_total_queries):
+                child_task.fetch_progress = int(child_queries_done * 100 / child_total_queries)
+                parent_task.fetch_progress = int(parent_queries_done * 100 / parent_total_queries)
+                child_task.save()
+                parent_task.save()
             path_zxy = os.path.join(path_zx, str(j))
             if os.path.exists(path_zxy) == False:
                 os.mkdir(path_zxy)
@@ -73,12 +80,12 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
                 
                 
     if inference:
-        task.task_status = "inferencing"
-        task.save()
+        child_task.task_status = "inferencing"
+        child_task.save()
         logging.info("Inferencing began")
         concated_img = concatenate_image(x_range, y_range, zoom, start=start_date, end=end_date, images_db_path=images_db_path,
                                          return_img=True, save_img=False)
-        logging.info("Images concateated for Inferencing")
+        logging.info("Images concatenated for Inferencing")
 
         global model_path
         coords = xyz2bbox_territory(x_range, y_range, zoom)
@@ -88,7 +95,8 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
                    annotations=["score", "length", "coord"], annotation_font=r"calibri.ttf",annotation_font_size=12, annotation_bbox_width=1)
         ships_data = detection_results["ships_data"]
         annotated_img = detection_results["annotated_image"]
-
+    
+        logging.info("Annotated image is being deconcatenated for storing")
         deconcated_annotated_images = deconcat_image(annotated_img, x_range, y_range)
         for x, y, img in deconcated_annotated_images:
             annot_img_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path, annotation_mode=True)
@@ -96,7 +104,7 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
             image_obj = SatteliteImage.objects.get(image_path=image_path)
             image_obj.annotated_image_path = annot_img_path
             image_obj.save()
-        logging.info("All deconcatenated images path saved in SatteliteImage table")
+        logging.info("All deconcatenated images paths saved in the SatteliteImage table")
 
         print("\n\n\nships_data:",ships_data, "\n\n\n")
         print("images_meta: ", images_meta, "\n\n\n")
@@ -117,28 +125,31 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, task
                     obj_id = f"x{x}_y{y}_z{zoom}_({timestamp})_{obj}"
                     image_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path)
                     source_img = SatteliteImage.objects.get(image_path=img_path)
-                    DetectedObject.objects.update_or_create(id=obj_id, task=task, image=source_img, lon=lon, lat=lat, time_from=start_date,
-                                                            time_to=end_date, confidence=confidence, length=length, object_type=object_type,
-                                                            # awake=awake
-                                                            )
-                    # detected_obj= DetectedObject.objects.update_or_create(id=obj_id)
+                    obj_attrs = {"task":child_task, "lon":lon, "lat":lat, "time_from":start_date,
+                                 "time_to":end_date, "confidence":confidence, "length":length, "object_type":object_type, #"awake":awake,
+                                 }
+                    detected_obj, created = DetectedObject.objects.update_or_create(id=obj_id, image=source_img)
+                    for key, value in obj_attrs.items():
+                        setattr(detected_obj, key, value)
+                    detected_obj.save() 
         logging.info("All detected objects meta data added to DetectedObject table")
         
-        task.task_status = "inferenced"
-        task.save()
-
+        child_task.task_status = "inferenced"
+        child_task.save()
     if save_concated:
+        logging.info("Concatenated image is being saved")
         if os.path.exists(concated_images_path) is False:
             os.mkdir(concated_images_path)
         concated_img_path = os.path.join(concated_images_path, fr"x({x_range[0]}_{x_range[1]})-y({y_range[0]}_{y_range[1]})-z({zoom})-{timestamp}.png")
         concated_img.save(concated_img_path)
-        logging.info("Concated image saved")
+        logging.info("Concatenated image saved")
 
     if save_concated and inference:
+        logging.info("Annotated concatenated image is being saved")
         annotated_concated_img_path = os.path.join(concated_images_path, fr"x({x_range[0]}_{x_range[1]})-y({y_range[0]}_{y_range[1]})-z({zoom})-{timestamp}_annotated.png")
         annotated_img.save(annotated_concated_img_path)
-        logging.info("Annotated image saved")
-    return n_queries_done
+        logging.info("Annotated concatenated image saved")
+    return parent_queries_done
 
 
 

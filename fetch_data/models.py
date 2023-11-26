@@ -30,6 +30,9 @@ class PresetArea(models.Model):
 
     def __str__(self):
         return self.tag
+    
+    def lonlat(self):
+        return f"[{self.lon_min}, {self.lat_min}, {self.lon_max}, {self.lat_max}]"
 
     def x_range_z14(self):
         return (int(self.x_min_z14), int(self.x_max_z14))
@@ -114,12 +117,13 @@ class QueuedTask(models.Model):
     TASK_STATUS = [('fetching', 'fetch_in_progress'), ('fetched', 'fetched'), ('inferencing', 'inference_in_progress'), ('inferenced', 'inferenced')]
 
     task_id = models.CharField(primary_key=True, max_length=255)
+    parent_task_id = models.CharField(max_length=255, null=True)
     user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
     task_type = models.CharField(max_length=128, choices=TASK_TYPES)
     task_status = models.CharField(max_length=128, choices=TASK_STATUS)
     fetch_progress = models.IntegerField(null=True, blank=True)
 
-    area_tag = models.ForeignKey(PresetArea, null=True, on_delete=models.DO_NOTHING)
+    area_tag = models.ManyToManyField(PresetArea)
     lon_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
     lat_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
     lon_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
@@ -143,11 +147,11 @@ class DetectedObject(models.Model):
     task = models.ForeignKey(QueuedTask, blank=True, null=True, related_name="detected_objects", on_delete=models.DO_NOTHING)
     image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
     
-    lon = models.FloatField()
-    lat = models.FloatField()
+    lon = models.FloatField(null=True,)
+    lat = models.FloatField(null=True,)
 
-    time_from = models.DateField()
-    time_to = models.DateField()
+    time_from = models.DateField(null=True,)
+    time_to = models.DateField(null=True,)
     object_type = models.ForeignKey(WaterCraft, null=True, related_name="detected_objects", on_delete=models.CASCADE)
     confidence = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)])
     length = models.FloatField(null=True, blank=True)
