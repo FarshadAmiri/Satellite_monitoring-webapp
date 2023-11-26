@@ -59,6 +59,13 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
                                                 fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
                                                 lat_max=lat_max_child, zoom=zoom, x_min=x_min_child, x_max=x_max_child, y_min=y_min_child, y_max=y_max_child,
                                                 time_from=start_date, time_to=end_date, user_queued=user,)
+            childs_task_ids = parent_task.childs_task_ids
+            if childs_task_ids == "":
+                childs_task_ids = childs_task_ids + f"{child_task_id}"
+            else:
+                childs_task_ids = childs_task_ids + f"***{child_task_id}"
+            parent_task.childs_task_ids = childs_task_ids
+            parent_task.save()
             area_tags_child = territory_tags(territory_coords_child, margin_neglect=0.01)
             for tag in area_tags_child:
                 area = PresetArea.objects.get(tag=tag)
@@ -355,7 +362,8 @@ def AllTasksView(request):
     if request.method=="GET" and request.user.is_authenticated:
         parent_tasks =  QueuedTask.objects.filter(is_parent=True).order_by('-time_queued')
         for parent_task in parent_tasks:
-            pass
+            childs_task_ids = parent_task.childs_task_ids.split("***")
+            ############## CONTINUE HERE
 
         tasks =  QueuedTask.objects.all().order_by('-time_queued')
         return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user, 'all_tasks': True})
