@@ -34,10 +34,11 @@ def store_image(x, y, zoom, start_date, end_date, n_days_before_date=None, date=
 
 
 def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, child_task_id, parent_task_id, parent_queries_done, parent_total_queries,
-                              overwrite_repetitious=False, images_db_path=images_db_path, inference=True, save_concated=False):
+                              subtasks, overwrite_repetitious=False, images_db_path=images_db_path, inference=True, save_concated=False,):
     
     child_task = QueuedTask.objects.get(task_id=child_task_id)
-    parent_task = QueuedTask.objects.get(task_id=parent_task_id)
+    if subtasks:
+        parent_task = QueuedTask.objects.get(task_id=parent_task_id)
     child_total_queries = (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1)
     child_queries_done = 0
 
@@ -59,11 +60,13 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
             os.mkdir(path_zx)
         for j in tqdm(range(y_range[0], y_range[1]+1)):
             child_queries_done += 1
+            parent_queries_done += 1
             if (child_queries_done % 10 == 0) or (child_queries_done == child_total_queries):
                 child_task.fetch_progress = int(child_queries_done * 100 / child_total_queries)
-                parent_task.fetch_progress = int(parent_queries_done * 100 / parent_total_queries)
                 child_task.save()
-                parent_task.save()
+                if subtasks:
+                    parent_task.fetch_progress = int(parent_queries_done * 100 / parent_total_queries)
+                    parent_task.save()
             path_zxy = os.path.join(path_zx, str(j))
             if os.path.exists(path_zxy) == False:
                 os.mkdir(path_zxy)
@@ -72,11 +75,18 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
             images_meta.append((i, j, image_path))
             if overwrite_repetitious or (os.path.exists(image_path) == False):
                 image, url = sentinel_query(coords=(i, j, zoom), start_formatted=start_formatted, end_formatted=end_formatted, output_img=True, output_url=True)
-                lonmin, latmin, lonmax, latmax = map(lambda i: round(i,6), xyz2bbox((i, j, zoom)))
+                # lonmin, latmin, lonmax, latmax = map(lambda i: round(i,6), xyz2bbox((i, j, zoom)))
                 image.save(image_path)
-                SatteliteImage.objects.update_or_create(image_path=image_path, x=i, y=j, zoom=zoom, time_from=start_date,
-                                                        time_to=end_date, bbox_lon1=lonmin, bbox_lat1=latmin,
-                                                        bbox_lon2=lonmax, bbox_lat2=latmax, data_source="Sentinel2")
+            lonmin, latmin, lonmax, latmax = map(lambda i: round(i,6), xyz2bbox((i, j, zoom)))
+            # SatteliteImage.objects.update_or_create(image_path=image_path, x=i, y=j, zoom=zoom, time_from=start_date,
+            #                                         time_to=end_date, bbox_lon1=lonmin, bbox_lat1=latmin,
+            #                                         bbox_lon2=lonmax, bbox_lat2=latmax, data_source="Sentinel2")
+            img_obj, created = SatteliteImage.objects.update_or_create(image_path=image_path)
+            img_obj_attrs = {"x": i, "y": j, "zoom":zoom, "time_from":start_date, "time_to":end_date, "bbox_lon1":lonmin, "bbox_lat1":latmin,
+                             "bbox_lon2":lonmax, "bbox_lat2":latmax, "data_source":"Sentinel2"}
+            for key, value in img_obj_attrs.items():
+                setattr(img_obj, key, value)
+            img_obj.save()
                 
                 
     if inference:
@@ -106,8 +116,6 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
             image_obj.save()
         logging.info("All deconcatenated images paths saved in the SatteliteImage table")
 
-        print("\n\n\nships_data:",ships_data, "\n\n\n")
-        print("images_meta: ", images_meta, "\n\n\n")
         for obj, data in ships_data.items():
             for x, y, img_path in images_meta:
                 if coords_in_a_xyz(data["lon_lat"], (x, y, zoom)):
@@ -124,6 +132,8 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
 
                     obj_id = f"x{x}_y{y}_z{zoom}_({timestamp})_{obj}"
                     image_path = image_dir_in_image_db(x, y, zoom, timestamp, base_dir=images_db_path)
+
+                    # print(f"\n\n\nimg_path\n{img_path}\n\n\n")
                     source_img = SatteliteImage.objects.get(image_path=img_path)
                     obj_attrs = {"task":child_task, "lon":lon, "lat":lat, "time_from":start_date,
                                  "time_to":end_date, "confidence":confidence, "length":length, "object_type":object_type, #"awake":awake,

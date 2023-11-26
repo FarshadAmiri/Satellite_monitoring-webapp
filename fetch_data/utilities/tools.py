@@ -325,7 +325,7 @@ def coords_2_xyz_newton(coords, zoom):
     return result
 
 
-def territory_tags(territory_coords):
+def territory_tags(territory_coords, margin_neglect=0.01):
     from fetch_data.models import PresetArea
 
     lon_min, lat_min, lon_max, lat_max = territory_coords
@@ -335,6 +335,6 @@ def territory_tags(territory_coords):
         lon_min_area, lon_max_area = area.lon_min, area.lon_max
         lat_min_area, lat_max_area = area.lat_min, area.lat_max
 
-        if (lon_min <= lon_min_area) and (lon_max >= lon_max_area) and (lat_min <= lat_min_area) and (lat_max >= lat_max_area):
+        if (lon_min - margin_neglect <= lon_min_area) and (lon_max + margin_neglect >= lon_max_area) and (lat_min - margin_neglect <= lat_min_area) and (lat_max + margin_neglect >= lat_max_area):
             tags.append(area.tag)
     return tags

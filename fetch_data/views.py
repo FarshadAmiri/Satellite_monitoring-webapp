@@ -26,41 +26,62 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
     parent_queries_done = 0
 
     territories = territory_divider(x_range, y_range, piece_size=70, flattened=True)
+    subtasks = False if len(territories) == 1 else True
     logging.info(f"\nterritories:\n{territories}\n")
 
     parent_task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
     task_ids = [f"{parent_task_id}_part{i+1}" for i in range(len(territories))]
     task_type = "fetch_infer" if inference else "fetch"
 
-    task_parent = QueuedTask.objects.create(task_id=parent_task_id, task_type=task_type, task_status="fetching", fetch_progress=0, 
+    parent_task = QueuedTask.objects.create(task_id=parent_task_id, is_parent=True, task_type=task_type, task_status="fetching", fetch_progress=0, 
                            lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
                            zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
                            time_from=start_date, time_to=end_date, user_queued=user,)
-    task_parent.save()
+    
+    territory_coords_parent = (lon_min, lat_min, lon_max, lat_max)
+    area_tags_parent = territory_tags(territory_coords_parent, margin_neglect=0.01)
+    for tag in area_tags_parent:
+        area = PresetArea.objects.get(tag=tag)
+        parent_task.area_tag.add(area)
+        parent_task.save()
+    parent_task.save()
 
-    for idx, territory in enumerate(territories):
-        logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
-        x_range_child = territory[0]
-        y_range_child = territory[1]
-        territory_coords = xyz2bbox_territory(x_range, y_range, zoom)
-        lon_min_child, lat_min_child, lon_max_child, lat_max_child = territory_coords
+    if subtasks:
+        for idx, territory in enumerate(territories):
+            x_range_child = territory[0]
+            y_range_child = territory[1]
+            (x_min_child, x_max_child), (y_min_child, y_max_child) = x_range_child, y_range_child
+            territory_coords_child = xyz2bbox_territory(x_range_child, y_range_child, zoom)
+            lon_min_child, lat_min_child, lon_max_child, lat_max_child = territory_coords_child
 
-        area_tags = territory_tags(territory_coords)
-        child_task_id = task_ids[idx]
-        child_task = QueuedTask.objects.create(task_id=child_task_id, parent_task_id=parent_task_id, task_type=task_type, task_status="fetching",
-                                               fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
-                                               lat_max=lat_max_child, zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                                               time_from=start_date, time_to=end_date, user_queued=user,)
-        for tag in area_tags:
-            area = PresetArea.objects.get(tag=tag)
-            child_task.area_tag.add(area)
+            child_task_id = task_ids[idx]
+            child_task = QueuedTask.objects.create(task_id=child_task_id, is_parent=False, parent_task_id=parent_task_id, task_type=task_type, task_status="fetching",
+                                                fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
+                                                lat_max=lat_max_child, zoom=zoom, x_min=x_min_child, x_max=x_max_child, y_min=y_min_child, y_max=y_max_child,
+                                                time_from=start_date, time_to=end_date, user_queued=user,)
+            area_tags_child = territory_tags(territory_coords_child, margin_neglect=0.01)
+            for tag in area_tags_child:
+                area = PresetArea.objects.get(tag=tag)
+                child_task.area_tag.add(area)
             child_task.save()
+        for idx, territory in enumerate(territories):
+            logging.info(f"Territory {idx} (out of {len(territories)}) began fetching")
+            x_range_child = territory[0]
+            y_range_child = territory[1]
+            territory_coords_child = xyz2bbox_territory(x_range, y_range, zoom)
+            lon_min_child, lat_min_child, lon_max_child, lat_max_child = territory_coords_child
 
-        t1 = time.perf_counter()
-        parent_queries_done = territory_fetch_inference(x_range_child, y_range_child, zoom, start_date=start_date, end_date=end_date, child_task_id=child_task_id,
-                                parent_task_id= parent_task_id, parent_queries_done=parent_queries_done, parent_total_queries=parent_total_queries,
-                                overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
-        logging.info(f"{(time.perf_counter() - t1):.0f} seconds to fetch this territory")
+            child_task_id = task_ids[idx]
+            t1 = time.perf_counter()
+            parent_queries_done = territory_fetch_inference(x_range_child, y_range_child, zoom, start_date=start_date, end_date=end_date, child_task_id=child_task_id,
+                                    parent_task_id=parent_task_id, subtasks=True ,parent_queries_done=parent_queries_done, parent_total_queries=parent_total_queries,
+                                    overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+            logging.info(f"{(time.perf_counter() - t1):.0f} seconds elapsed to fetch this territory")
+    else:
+        territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, child_task_id=parent_task_id,
+                                  parent_task_id= None, subtasks=False ,parent_queries_done=None, parent_total_queries=None,
+                                  overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+
     return
 
 
@@ -128,7 +149,7 @@ def territory_fetch(request):
             ### End QueuedTask lines
             # fetch(territories, task_ids, task_type, x_min, x_max, y_min, y_max, zoom, start_date, end_date,
             #       overwrite_repetitious, inference, save_concated, lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max,)
-            
+            t0 = time.perf_counter()
             fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated,
                   lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, user=user)
 
@@ -141,7 +162,7 @@ def territory_fetch(request):
             
             # fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
             # overwrite_repetitious, inference, save_concated)
-     
+            logging.info(f"{(time.perf_counter() - t0):.0f} seconds elapsed to fetch all territories")
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
             return render(request, "fetch_data/error.html", context={'errors': form.errors})
@@ -332,6 +353,10 @@ def MyTasksView(request):
 def AllTasksView(request):
     user = request.user
     if request.method=="GET" and request.user.is_authenticated:
+        parent_tasks =  QueuedTask.objects.filter(is_parent=True).order_by('-time_queued')
+        for parent_task in parent_tasks:
+            pass
+
         tasks =  QueuedTask.objects.all().order_by('-time_queued')
         return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user, 'all_tasks': True})
     

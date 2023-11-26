@@ -14,7 +14,7 @@
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
         <p>This fetch reuested by <span class="username">@{{ task.user_queued}}</span> at <span class="info">{{ task.time_queued }}</span>
-        &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{{task.area_tag}}</span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min }}</span> to <span class="lonlat">{{ task.lon_max }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min }}</span> to <span class="lonlat">{{ task.lat_max }}</span>
+        &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{{task.area_tag}}</span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
         </p>
         <p>Fetch progress: {{ task.fetch_progress }}%</p>
         <p id="guide">*Click on the row to see fetch parameters</p>

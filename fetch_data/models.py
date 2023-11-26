@@ -117,7 +117,9 @@ class QueuedTask(models.Model):
     TASK_STATUS = [('fetching', 'fetch_in_progress'), ('fetched', 'fetched'), ('inferencing', 'inference_in_progress'), ('inferenced', 'inferenced')]
 
     task_id = models.CharField(primary_key=True, max_length=255)
+    is_parent = models.BooleanField(null=True)
     parent_task_id = models.CharField(max_length=255, null=True)
+    childs_task_ids = models.TextField(null=True)
     user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
     task_type = models.CharField(max_length=128, choices=TASK_TYPES)
     task_status = models.CharField(max_length=128, choices=TASK_STATUS)

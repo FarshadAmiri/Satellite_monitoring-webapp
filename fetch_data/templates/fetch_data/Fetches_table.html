@@ -34,7 +34,13 @@
                 {% if all_tasks %}
                     <td class="username">@{{task.user_queued}}</td>
                 {% endif %}
-                <td class="info">{{task.area_tag}}</td>
+                {% comment %} <td class="info">{{task.area_tag.all()}}</td> {% endcomment %}
+                <td class="info">
+                {% for area_tag in task.area_tag.all %}
+                    {{ area_tag }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                </td>
                 {% if task.task_type == "fetch" %}
                     <td>Fetch</td>
                 {% elif task.task_type == "fetch_infer" %}
