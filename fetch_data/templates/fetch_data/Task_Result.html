@@ -8,8 +8,8 @@
 
 {% block head-static %}
 <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
-<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/my_or_all_fetches.css' %}">
+<script type="text/javascript" src="{% static 'js/fetch_data/task_result.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/task_result.css' %}">
 {% endblock %}
 
 {% block body %}
@@ -21,7 +21,7 @@
         &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{% for area_tag in task.area_tag.all %}{{ area_tag }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
         </p>
-        <h5>Fetch progress: <span class="result-meta">{{ task.fetch_progress }}%</span>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span class="result-meta">{{ objects|length }}</span> Objects found</h5>
+        <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span class="result-meta">{{ objects|length }}</span> Objects  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Status: {% if task.task_status == "fetching" %}<span>Fetch in progress</span>{% elif task.task_status == "fetched" %}<span>Fetching completed</span>{% elif task.task_status == "inferencing" %}<span>Inference in progress</span>{% elif task.task_status == "inferenced" %}<span>Inferencing completed</span>{% endif %}</h5>
         <table class="table">
             <thead>
             <tr>
@@ -44,7 +44,13 @@
                 <td>{{ obj.confidence|mul:100|floatformat:1 }}%</td>
                 <td>{{ obj.lon|floatformat:6}}</td>
                 <td>{{ obj.lat|floatformat:6 }}</td>
-                <td>{{ obj.image }}</td>
+                {% comment %} <td><a class="image-link" href="../../static/icons/main_icon.png">image</a></td> {% endcomment %}
+                {% comment %} <td><a class="image-link" href="../../SatteliteImages_db/14/10757/6918/2023-11-17_2023-11-27_annotated.png">image</a></td> {% endcomment %}
+                {% comment %} <td><a class="image-link" href="https://cdn.shopify.com/s/files/1/2018/8867/files/matteo-paganelli-39971_530x.jpg">image</a></td> {% endcomment %}
+                <td><a href="{% url 'fetch_data:image_get' task.task_id obj.image %}">Image</a></td>
+                {% comment %} <td><img src="{% url 'fetch_data:image_get' obj.image %}" style="height:35px; width:54px"></a></td> {% endcomment %}
+                {% comment %} <td><img src="{{ obj.image }}">image</a></td> {% endcomment %}
+                {% comment %} <td>{{ obj.image }}</td> {% endcomment %}
             </tr>
             <tr class="collapse details-row">
             <td colspan="5">

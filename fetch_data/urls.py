@@ -12,4 +12,5 @@ urlpatterns = [
     path('task_result/tasks?<str:task_id>', TaskResult, name="task_result"),
     path('test', test, name='test'),
     path("api-territory_fetch", territory_fetch_APIView.as_view()),
+    path('task?<str:task_id>?img?<str:image_dir>', ImageGet, name='image_get'),
 ]

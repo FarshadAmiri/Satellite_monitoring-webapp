@@ -57,6 +57,13 @@ table .collapse.in {
   font-size: 26px
 }
 
+.result-meta-green {
+    color: rgb(21, 114, 3);
+    font-weight: bolder; 
+    font-size: 26px
+  }
+
+
 .title {
   font-size: 26px;
   font-weight: bold;

@@ -27,11 +27,7 @@ body {
 
 
 #logo {
-  content: url("..\\..\\bcg\\logo1.png");
+  content: url("..\\..\\bcg\\logo2.png");
   /* width: 54px;
   height: 30px; */
-}
-
-#main_icon {
-  content: url("..\\..\\icons\\main_icon.png");
 }

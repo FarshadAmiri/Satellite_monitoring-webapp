@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib import auth
 from datetime import datetime, timedelta
+from PIL import Image
 import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
@@ -419,3 +420,13 @@ def TaskResult(request, task_id):
         #     detected_objects.order_by('-confidence')
 
         return render(request, "fetch_data/Task_Result.html", context={'task': task, 'objects': detected_objects, 'user':user})
+
+
+@login_required(login_url='users:login')
+def ImageGet(request, task_id, image_dir):
+    image_dir_annotated = image_dir[:-4] + "_annotated" + image_dir[-4:]
+    img = Image.open(image_dir_annotated)
+    img.show()
+    # return HttpResponse(img, content_type="image/png")
+    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+
