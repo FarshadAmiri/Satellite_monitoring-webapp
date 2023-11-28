@@ -1,19 +1,23 @@
 {% extends "fetch_data\\base.html" %}
 {% load static %}
 
+{% block head-title %}
+    <title>Fetches table</title>
+{% endblock %}
+
 {% block head-static %}
-<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/my_or_all_fetches.css' %}">
+<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 {% endblock %}
 
 {% block body %}
 
-<div class="container">
+<div class="container-fluid" style="padding: 40px">
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
-        <p id="guide">*Click on the row to see fetch parameters</p>
-        <table class="table">
+        {% if all_tasks %}<p class="title">All users fetch requests<span>{% else %}<p class="title">Your fetch requests: <span class="username" style="font-size: 26px">&nbsp @{{user.username}}</span></p>{% endif %}</p>
+        <table class="table table-responsive table-hover">
             <thead>
             <tr>
                 <th scope="col">#</th>
@@ -25,12 +29,23 @@
                 <th scope="col">Status</th>
                 <th scope="col">Progress</th>
                 <th scope="col">Request time</th>
+                <th scope="col">Lon</th>
+                <th scope="col">Lat</th>
+                <th scope="col">Time inteval</th>
                 <th scope="col">Result</th>
             </tr>
             </thead>
-            {% for task in tasks %}
-            <tr data-toggle="collapse" data-target=".details-row">
+            <tbody>
+            {% for tasks_group in tasks_list %}
+            {% with task=tasks_group.0 %}
+            <tr class="clickable parent-task" data-toggle="collapse" id="parent-row{{ forloop.counter0 }}" data-target=".child-row{{ forloop.counter0 }}" aria-expanded="true" aria-controls=".child-row{{ forloop.counter0 }}">
+                {% comment %} <td>{{ forloop.counter }}</td> {% endcomment %}
+            {% comment %} aria-expanded="false" aria-controls="row1-details" {% endcomment %}
+                {% if tasks_group|length > 1 %}
+                <td>{{ forloop.counter }}&nbsp<img id="chevron-down"></td>
+                {% else %}
                 <td>{{ forloop.counter }}</td>
+                {% endif %}
                 {% if all_tasks %}
                     <td class="username">@{{task.user_queued}}</td>
                 {% endif %}
@@ -61,11 +76,51 @@
 
                 <td>{{ task.fetch_progress }}%</td>
                 <td>{{ task.time_queued }}</td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{task.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{task.lon_max|floatformat:4}}</span></td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{task.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{task.lat_max|floatformat:4}}</span></td>
+                <td scope="col"><span class="date">{{task.time_from}}</span> to<br><span class="date">{{task.time_to}}</span></td>
                 <td><a href="{% url 'fetch_data:task_result' task.task_id %}">Result</a></td>
             </tr>
-            <tr class="collapse details-row">
-            <td colspan="5">
-                <div class="details-content">
+            {% if tasks_group|length > 1 %}
+            {% for subtask in tasks_group|slice:"1:" %}
+            {% comment %} <tr class="collapse child-row{{ forloop.parentloop.counter0 }}" data-parent="#parent-row{{ forloop.parentloop.counter0 }}"> {% endcomment %}
+            <tr class="child-task">
+                <td>{{ forloop.parentloop.counter }}_Part{{ forloop.counter }}</td>
+                {% if all_tasks %}
+                    <td class="username">@{{task.user_queued}}</td>
+                {% endif %}
+                <td class="info">
+                {% for area_tag in subtask.area_tag.all %}
+                    {{ area_tag }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                </td>
+                {% if subtask.task_type == "fetch" %}
+                    <td>Fetch</td>
+                {% elif subtask.task_type == "fetch_infer" %}
+                    <td>Fetch & Inference</td>
+                {% elif subtask.task_type == "infer" %}
+                    <td>Inference</td>
+                {% endif %}
+
+                {% if subtask.task_status == "fetching" %}
+                    <td>Fetch in progress</td>
+                {% elif subtask.task_status == "fetched" %}
+                    <td>Fetching completed</td>
+                {% elif subtask.task_status == "inferencing" %}
+                    <td>Inference in progress</td>
+                {% elif subtask.task_status == "inferenced" %}
+                    <td>Inferencing completed</td>
+                {% endif %}
+
+                <td>{{ subtask.fetch_progress }}%</td>
+                <td>{{ subtask.time_queued }}</td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{subtask.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{subtask.lon_max|floatformat:4}}</span></td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{subtask.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{subtask.lat_max|floatformat:4}}</span></td>
+                <td scope="col"><span class="date">{{subtask.time_from}}</span> to<br><span class="date">{{subtask.time_to}}</span></td>
+                <td><a href="{% url 'fetch_data:task_result' subtask.task_id %}">Result</a></td>
+            </tr>
+                {% comment %} <div class="details-content">
                     <p>Lon: <span class="lonlat">{{task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{task.lon_max|floatformat:4}}</span>
                     &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp X: <span class="lonlat">{{task.x_min}}</span> to <span class="lonlat">{{task.x_max}}</span>
                     &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Zoom: <span class="lonlat">{{task.zoom}}</span>
@@ -74,11 +129,16 @@
                     <p>Lat:  <span class="lonlat">{{task.lat_min|floatformat:4}}</span>  to <span class="lonlat">{{task.lat_max|floatformat:4}}</span>
                     &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Y: <span class="lonlat">{{task.y_min}}</span> to <span class="lonlat">{{task.y_max}}</span>
                     </p>
-                </div>
-            </td>
-            </tr>
+                </div> {% endcomment %}
+            {% comment %} </td>
+            </tr> {% endcomment %}
             {% endfor %}
+            {% endif %}
+            {% endwith %}
+            {% endfor %}
+            <tbody>
         </table>
     </div>
+</div>
 </div>
 {% endblock %}

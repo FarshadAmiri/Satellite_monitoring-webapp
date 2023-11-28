@@ -60,7 +60,8 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
             os.mkdir(path_zx)
         for j in tqdm(range(y_range[0], y_range[1]+1)):
             child_queries_done += 1
-            parent_queries_done += 1
+            if subtasks:
+                parent_queries_done += 1
             if (child_queries_done % 10 == 0) or (child_queries_done == child_total_queries):
                 child_task.fetch_progress = int(child_queries_done * 100 / child_total_queries)
                 child_task.save()
@@ -135,13 +136,18 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
 
                     # print(f"\n\n\nimg_path\n{img_path}\n\n\n")
                     source_img = SatteliteImage.objects.get(image_path=img_path)
-                    obj_attrs = {"task":child_task, "lon":lon, "lat":lat, "time_from":start_date,
-                                 "time_to":end_date, "confidence":confidence, "length":length, "object_type":object_type, #"awake":awake,
-                                 }
+                    obj_attrs = {"lon":lon, "lat":lat, "time_from":start_date, "time_to":end_date, "confidence":confidence, "length":length,
+                                 "object_type":object_type, #"awake":awake,
+                                       }
                     detected_obj, created = DetectedObject.objects.update_or_create(id=obj_id, image=source_img)
+                    if subtasks:
+                        detected_obj.task.add(child_task, parent_task)
+                    else:
+                        detected_obj.task.add(child_task)
+
                     for key, value in obj_attrs.items():
                         setattr(detected_obj, key, value)
-                    detected_obj.save() 
+                    detected_obj.save()
         logging.info("All detected objects meta data added to DetectedObject table")
         
         child_task.task_status = "inferenced"

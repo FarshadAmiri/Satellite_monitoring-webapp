@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib import auth
+from datetime import datetime, timedelta
 import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
@@ -18,14 +19,18 @@ from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, co
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
+fetch_chunk_size=25
+
 
 # @shared_task
 def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated, lon_min, lat_min, lon_max, lat_max, user):
+    global fetch_chunk_size
     (x_min, x_max), (y_min, y_max) = x_range, y_range
     parent_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
     parent_queries_done = 0
 
-    territories = territory_divider(x_range, y_range, piece_size=70, flattened=True)
+    territories = territory_divider(x_range, y_range, piece_size=fetch_chunk_size, flattened=True)
+    print(f"\n\n\nterritories: ", territories, "\n\n\n")
     subtasks = False if len(territories) == 1 else True
     logging.info(f"\nterritories:\n{territories}\n")
 
@@ -37,6 +42,7 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
                            lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
                            zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
                            time_from=start_date, time_to=end_date, user_queued=user,)
+    # detected_objects = parent_task.detected_objects.all().order_by('-confidence')
     
     territory_coords_parent = (lon_min, lat_min, lon_max, lat_max)
     area_tags_parent = territory_tags(territory_coords_parent, margin_neglect=0.01)
@@ -55,16 +61,11 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
             lon_min_child, lat_min_child, lon_max_child, lat_max_child = territory_coords_child
 
             child_task_id = task_ids[idx]
-            child_task = QueuedTask.objects.create(task_id=child_task_id, is_parent=False, parent_task_id=parent_task_id, task_type=task_type, task_status="fetching",
+            child_task = QueuedTask.objects.create(task_id=child_task_id, is_parent=False, task_type=task_type, task_status="fetching",
                                                 fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
                                                 lat_max=lat_max_child, zoom=zoom, x_min=x_min_child, x_max=x_max_child, y_min=y_min_child, y_max=y_max_child,
                                                 time_from=start_date, time_to=end_date, user_queued=user,)
-            childs_task_ids = parent_task.childs_task_ids
-            if childs_task_ids == "":
-                childs_task_ids = childs_task_ids + f"{child_task_id}"
-            else:
-                childs_task_ids = childs_task_ids + f"***{child_task_id}"
-            parent_task.childs_task_ids = childs_task_ids
+            parent_task.child_task.add(child_task)
             parent_task.save()
             area_tags_child = territory_tags(territory_coords_child, margin_neglect=0.01)
             for tag in area_tags_child:
@@ -84,6 +85,9 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
                                     parent_task_id=parent_task_id, subtasks=True ,parent_queries_done=parent_queries_done, parent_total_queries=parent_total_queries,
                                     overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
             logging.info(f"{(time.perf_counter() - t1):.0f} seconds elapsed to fetch this territory")
+        
+        parent_task.task_status = "inferenced"
+        parent_task.save()
     else:
         territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, child_task_id=parent_task_id,
                                   parent_task_id= None, subtasks=False ,parent_queries_done=None, parent_total_queries=None,
@@ -107,7 +111,11 @@ def territory_fetch(request):
         date_type = request.POST.get('date_type')
         save_concated = True if request.POST.get('save_concated') == "True" else False
         if form.is_valid():
-            zoom = int(form.cleaned_data['zoom'])
+            zoom = form.cleaned_data['zoom']
+            if zoom is None:
+                message = 'Please specify a value for "Zoom". Downloading and storing tile images will be performed based on this value; be informed the default Zoom is 14.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message})
+            zoom = int(zoom)
             if coordinate_type == "xy":
                 x_min = form.cleaned_data['x_min']
                 x_max = form.cleaned_data['x_max']
@@ -122,6 +130,9 @@ def territory_fetch(request):
                 lat_min = form.cleaned_data['lat_min']
                 lat_max = form.cleaned_data['lat_max']
                 coords = (lon_min, lat_min, lon_max, lat_max)
+                if all([lon_min, lat_min, lon_max, lat_max]) is False:
+                    message = 'All terms of coordinates (Lon min, Lat min, Lon max, Lat max) should be given! Please modify your inputs.'
+                    return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message}) 
                 x_range, y_range, _ = coords_2_xyz_newton(coords, zoom)
                 (x_min, x_max), (y_min, y_max) = x_range, y_range
             if date_type == 'start_end':
@@ -133,8 +144,32 @@ def territory_fetch(request):
                 date_data = start_end_time_interpreter(n_days_before_base_date=n_days_before_base_date, base_date=base_date)
                 start_date = date_data['start_date']
                 end_date = date_data['end_date']
+
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             inference = form.cleaned_data['inference']
+            if start_date > end_date:
+                message = 'Start date is greater than end date. Please modify your inputs.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message})
+            if (start_date is None) or (end_date is None):
+                message = 'Start date and end date both should be specified. Please modify your inputs.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message})
+            if start_date > datetime.date.today():
+                message = 'Start date cannot be a date in future! Please modify your inputs.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message})
+            if end_date > datetime.date.today():
+                message = 'End date cannot be a date in future! Please modify your inputs.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message}) 
+            if all([lon_min, lat_min, lon_max, lat_max]) is False:
+                message = 'All terms of coordinates (Lon min, Lat min, Lon max, Lat max) should be given! Please modify your inputs.'
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message}) 
+                
+            
+            total_tiles_limit = 40000
+            total_tiles = (x_max - x_min + 1) * (y_max - y_min + 1)
+            if total_tiles > total_tiles_limit:
+                # message = f"The area is excessively large, comprising a total of {total_tiles} tile images. Fetch requests exceeding a threshold of {total_tiles_limit} tiles will not be accepted, as this would impose significant strain on network resources and processing capabilities."
+                return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "large_area", "total_tiles": total_tiles, "total_tiles_limit": total_tiles_limit})
+
             # territories = territory_divider(x_range, y_range, piece_size=70)
             # logging.info(f"\nterritories:\n{territories}\n")
 
@@ -211,9 +246,7 @@ def territory_fetch(request):
         
     elif request.method == 'POST' and 'last_10_days' in request.POST:
         form = SentinelFetchForm(request.POST)
-        logging.info("\n\n\n\Last 10 days form - before validation\n\n\n")
         if form.is_valid():
-            logging.info("\n\n\n\Last 10 days form is valid\n\n\n")
             preset_area = form.cleaned_data['preset_area']
             zoom = form.cleaned_data['zoom']
             lon_min = form.cleaned_data['lon_min']
@@ -349,25 +382,30 @@ def ConvertView(request):
 
 
 @login_required(login_url='users:login')
-def MyTasksView(request):
+def MyTasksView(request, time_limit):
     user = request.user
     if request.method=="GET" and request.user.is_authenticated:
-        tasks =  QueuedTask.objects.filter(user_queued=user).order_by('-time_queued')
-        return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user})
+        time_limit = datetime.datetime.today() - timedelta(days=time_limit)
+        parent_tasks =  QueuedTask.objects.filter(user_queued=user, is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
+        tasks_list = [[task] for task in parent_tasks]
+        for idx, parent_task in enumerate(parent_tasks):
+            children_tasks = parent_task.child_task.all().order_by('time_queued')
+            tasks_list[idx].extend(children_tasks)
+        return render(request, "fetch_data/Fetches_table.html", context={'tasks_list': tasks_list, 'user':user})
     
 
 @login_required(login_url='users:login')
-def AllTasksView(request):
+def AllTasksView(request, time_limit):
     user = request.user
     if request.method=="GET" and request.user.is_authenticated:
-        parent_tasks =  QueuedTask.objects.filter(is_parent=True).order_by('-time_queued')
-        for parent_task in parent_tasks:
-            childs_task_ids = parent_task.childs_task_ids.split("***")
-            ############## CONTINUE HERE
+        time_limit = datetime.datetime.today() - timedelta(days=time_limit)
+        parent_tasks =  QueuedTask.objects.filter(is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
+        tasks_list = [[task] for task in parent_tasks]
+        for idx, parent_task in enumerate(parent_tasks):
+            children_tasks = parent_task.child_task.all().order_by('time_queued')
+            tasks_list[idx].extend(children_tasks)
+        return render(request, "fetch_data/Fetches_table.html", context={'tasks_list': tasks_list, 'user':user, 'all_tasks': True})
 
-        tasks =  QueuedTask.objects.all().order_by('-time_queued')
-        return render(request, "fetch_data/Fetches_table.html", context={'tasks': tasks, 'user':user, 'all_tasks': True})
-    
 
 @login_required(login_url='users:login')
 def TaskResult(request, task_id):
@@ -375,4 +413,9 @@ def TaskResult(request, task_id):
     if request.method=="GET" and request.user.is_authenticated:
         task = QueuedTask.objects.get(task_id=task_id)
         detected_objects = task.detected_objects.all().order_by('-confidence')
+        # if task.is_parent:
+        #     for subtask in task.child_task.all():
+        #         detected_objects = detected_objects.union(subtask.detected_objects.all().order_by('-confidence'))
+        #     detected_objects.order_by('-confidence')
+
         return render(request, "fetch_data/Task_Result.html", context={'task': task, 'objects': detected_objects, 'user':user})

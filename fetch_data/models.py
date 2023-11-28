@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from users.models import User
 from fetch_data.utilities.tools import xyz2bbox_territory, bbox_geometry_calculator, coords_2_xyz_newton
+import datetime
 
 class PresetArea(models.Model):
     lon_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
@@ -118,8 +119,7 @@ class QueuedTask(models.Model):
 
     task_id = models.CharField(primary_key=True, max_length=255)
     is_parent = models.BooleanField(null=True)
-    parent_task_id = models.CharField(max_length=255, null=True)
-    childs_task_ids = models.TextField(null=True)
+    child_task = models.ManyToManyField("self", null=True, symmetrical=False, related_name='parent_task',)
     user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
     task_type = models.CharField(max_length=128, choices=TASK_TYPES)
     task_status = models.CharField(max_length=128, choices=TASK_STATUS)
@@ -140,13 +140,13 @@ class QueuedTask(models.Model):
     time_from = models.DateField()
     time_to = models.DateField()
 
-    time_queued = models.DateTimeField(auto_now_add=True)
+    time_queued = models.DateTimeField(default = datetime.datetime.now() + datetime.timedelta(hours=3, minutes=30))
     task_description = models.CharField(max_length=256)
 
 
 class DetectedObject(models.Model):
     id = models.CharField(primary_key=True, max_length=128)
-    task = models.ForeignKey(QueuedTask, blank=True, null=True, related_name="detected_objects", on_delete=models.DO_NOTHING)
+    task = models.ManyToManyField(QueuedTask, null=True, related_name="detected_objects")
     image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
     
     lon = models.FloatField(null=True,)

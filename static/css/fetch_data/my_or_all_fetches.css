@@ -29,3 +29,32 @@ font-weight: normal;
   font-size: 17px;
   font-weight: bold;
   }
+
+table .collapse.in {
+  display:table-row;
+}
+
+#chevron-down {
+  content: url("..\\..\\icons\\chevron-down.svg")
+}
+
+.child-task{
+  background-color: rgb(222, 243, 243);
+}
+
+.parent-task {
+  background-color: rgb(255, 255, 255);
+}
+
+.result-meta {
+  color: rgb(182, 71, 43);
+  font-weight: bolder; 
+  font-size: 26px
+}
+
+.title {
+  font-size: 26px;
+  font-weight: bold;
+  color: black;
+  padding: 0px;
+}

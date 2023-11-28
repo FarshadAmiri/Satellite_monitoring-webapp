@@ -5,12 +5,14 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="icon" href="static/icons/main_icon7.png" type="image/png">
    {% block head-title %}
       <title>Fetch data</title>
    {% endblock %}
+   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
    <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/base.css' %}">
-   <script src="{% static 'js/bootstrap.min.js' %}"></script>
+   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
    {% block head-static %}
    {% endblock %}
 </head>
@@ -52,10 +54,10 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item" >
-                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:allfetches' %}">All Fetches</a>
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:allfetches' time_limit=60 %}">All Fetches</a>
                     </li>
                     <li class="nav-item" >
-                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:myfetches' %}">My Fetches</a>
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:myfetches' time_limit=60 %}">My Fetches</a>
                     </li>
                     <li class="nav-item">
                         {% if not request.user.is_authenticated %}

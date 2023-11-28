@@ -1,5 +1,6 @@
 {% extends "fetch_data\base.html" %}
 {% load static %}
+{% comment %} {% load humanize %} {% endcomment %}
 
 {% block head-static %}
 <script type="text/javascript" src="{% static 'js/fetch_data/sentinelfetch.js' %}"></script>
@@ -14,6 +15,15 @@
 {{ form.media }}
 <form action="{% url 'fetch_data:SentinelFetch' %}" method="post">
 {% csrf_token %}
+{% if error %}
+<div class="alert alert-primary" role="alert">
+  {% if error == "large_area" %}
+  The area is excessively large, comprising a total of <span class="message_args">{{total_tiles}}</span> tile images. Fetch requests exceeding a threshold of <span class="message_args">{{total_tiles_limit}}</span> tiles will not be accepted, as this would impose significant strain on network resources and processing capabilities.
+  {% elif error == "other" %}
+  {{message}}
+  {% endif %}
+</div>
+{% endif %}
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #DFF3FF; margin: 6px">
     <div class="col-6" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
     <h2 id="box_title">Coordinations</h2>

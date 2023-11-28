@@ -198,7 +198,7 @@ def start_end_time_interpreter(start=None, end=None, n_days_before_base_date=Non
 
 
 
-def territory_divider(x_range, y_range, piece_size=70, flattened=False):
+def territory_divider_not_accurate(x_range, y_range, piece_size=70, flattened=False):
     x_min_ref , x_max_ref, y_min_ref, y_max_ref = min(x_range), max(x_range), min(y_range), max(y_range)
     x_length = x_max_ref - x_min_ref
     y_length = y_max_ref - y_min_ref
@@ -226,6 +226,46 @@ def territory_divider(x_range, y_range, piece_size=70, flattened=False):
             territories_row.append([(x_min, x_max) , (y_min, y_max)])
         territories.append(territories_row)
     
+    if flattened:
+        territories = [item for sublist in territories for item in sublist]
+    return territories
+
+
+
+def territory_divider(x_range, y_range, piece_size=70, flattened=False):
+    x_min_ref , x_max_ref, y_min_ref, y_max_ref = min(x_range), max(x_range), min(y_range), max(y_range)
+    x_length = x_max_ref - x_min_ref
+    y_length = y_max_ref - y_min_ref
+
+    x_remainder, y_remainder, x_pieces_opt, y_pieces_opt = piece_size, piece_size, piece_size, piece_size
+    piece_size_probable_range= range(int(0.7 * piece_size), int(1.3 * piece_size + 1))
+    for i in piece_size_probable_range:
+        if (x_length % i) < x_remainder:
+            x_remainder = x_length % i
+            x_pieces_opt = i
+        if (y_length % i) < y_remainder:
+            y_remainder = y_length % i
+            y_pieces_opt = i
+
+    x_no_steps = max(int(x_length//x_pieces_opt), 1)
+    y_no_steps = max(int(y_length//y_pieces_opt), 1)
+    territories = []
+    for h_partition in range(y_no_steps):
+        if h_partition == 0:
+            y_min = y_min_ref + h_partition * y_pieces_opt
+        else:
+            y_min = y_max + 1
+        y_max = y_max_ref if (h_partition == y_no_steps - 1) else (y_min + y_pieces_opt)
+        territories_row = []
+        for w_partition in range(x_no_steps):
+            if w_partition == 0:
+                x_min = x_min_ref + w_partition * x_pieces_opt
+            else:
+                x_min = x_max + 1
+            x_max = x_max_ref if (w_partition == x_no_steps - 1) else (x_min + x_pieces_opt)
+            territories_row.append([(x_min, x_max) , (y_min, y_max)])
+        territories.append(territories_row)
+
     if flattened:
         territories = [item for sublist in territories for item in sublist]
     return territories

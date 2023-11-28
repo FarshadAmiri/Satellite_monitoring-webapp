@@ -1,43 +1,170 @@
+{% extends "fetch_data\\base.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Fetch data</title>
-   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
-</head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavDropdown">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown link
-          </a>
-          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
-          </ul>
-        </li>
-      </ul>
-    </div>
-  </div>
-</nav>
-</body>
+{% block head-static %}
+<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/my_or_all_fetches.css' %}">
+{% endblock %}
+
+{% block body %}
+
+<table class="table table-responsive table-hover" style="color: white">
+    <thead>
+        <tr>
+            <th>Column</th>
+            <th>Column</th>
+            <th>Column</th>
+            <th>Column</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="clickable" data-toggle="collapse" id="row1" data-target=".row1">
+            <td><i class="glyphicon glyphicon-plus"></i></td>
+            <td>data</td>
+            <td>data</td>
+            <td>data</td>
+        </tr>
+        <tr class="collapse row1">
+            <td>- child row</td>
+            <td>data</td>
+            <td>data</td>
+            <td>data</td>
+        </tr>
+        <tr class="collapse row1">
+            <td>- child row</td>
+            <td>data</td>
+            <td>data</td>
+            <td>data</td>
+        </tr>
+        <tr class="clickable" data-toggle="collapse" id="row2" data-target=".row2">
+            <td><i class="glyphicon glyphicon-plus"></i></td>
+            <td>data</td>
+            <td>data</td>
+            <td>data</td>
+        </tr>
+        <tr class="collapse row2">
+            <td>- child row</td>
+            <td>data 2</td>
+            <td>data 2</td>
+            <td>data 2</td>
+        </tr>
+        <tr class="collapse row2">
+            <td>- child row</td>
+            <td>data 2</td>
+            <td>data 2</td>
+            <td>data 2</td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}
+
+        <table class="table table-responsive table-hover">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                {% if all_tasks %}
+                    <th scope="col">Queried by</th>
+                {% endif %}
+                <th scope="col">Area tag</th>
+                <th scope="col">Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Progress</th>
+                <th scope="col">Request time</th>
+                <th scope="col">Lon</th>
+                <th scope="col">Lat</th>
+                <th scope="col">Time inteval</th>
+                <th scope="col">Result</th>
+
+            </tr>
+            </thead>
+            <tbody>
+            {% for tasks_group in tasks_list %}
+            {% with task=tasks_group.0 %}
+            <tr class="clickable" data-toggle="collapse" id="row{{ forloop.counter0 }}" data-target="#row{{ forloop.counter0 }}-details" aria-expanded="false" aria-controls="row{{ forloop.counter0 }}-details">
+            {% comment %} aria-expanded="false" aria-controls="row1-details" {% endcomment %}
+                {% if tasks_group|length > 1 %}
+                <td>{{ forloop.counter }}&nbsp<img id="chevron-down"></td>
+                {% else %}
+                <td>{{ forloop.counter }}</td>
+                {% endif %}
+                {% if all_tasks %}
+                    <td class="username">@{{task.user_queued}}</td>
+                {% endif %}
+                {% comment %} <td class="info">{{task.area_tag.all()}}</td> {% endcomment %}
+                <td class="info">
+                {% for area_tag in task.area_tag.all %}
+                    {{ area_tag }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                </td>
+                {% if task.task_type == "fetch" %}
+                    <td>Fetch</td>
+                {% elif task.task_type == "fetch_infer" %}
+                    <td>Fetch & Inference</td>
+                {% elif task.task_type == "infer" %}
+                    <td>Inference</td>
+                {% endif %}
+
+                {% if task.task_status == "fetching" %}
+                    <td>Fetch in progress</td>
+                {% elif task.task_status == "fetched" %}
+                    <td>Fetching completed</td>
+                {% elif task.task_status == "inferencing" %}
+                    <td>Inference in progress</td>
+                {% elif task.task_status == "inferenced" %}
+                    <td>Inferencing completed</td>
+                {% endif %}
+
+                <td>{{ task.fetch_progress }}%</td>
+                <td>{{ task.time_queued }}</td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{task.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{task.lon_max|floatformat:4}}</span></td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{task.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{task.lat_max|floatformat:4}}</span></td>
+                <td scope="col"><span class="date">{{task.time_from}}</span> to<br><span class="date">{{task.time_to}}</span></td>
+                <td><a href="{% url 'fetch_data:task_result' task.task_id %}">Result</a></td>
+            </tr>
+            {% if tasks_group|length > 1 %}
+            {% for subtask in tasks_group|slice:"1:" %}
+            <tr class="collapse" id="row{{ forloop.parentloop.counter0 }}-details" >
+                <td>{{ forloop.counter }}</td>
+                {% if all_tasks %}
+                    <td class="username">@{{task.user_queued}}</td>
+                {% endif %}
+                <td class="info">
+                {% for area_tag in subtask.area_tag.all %}
+                    {{ area_tag }}
+                    {% if not forloop.last %}, {% endif %}
+                {% endfor %}
+                </td>
+                {% if subtask.task_type == "fetch" %}
+                    <td>Fetch</td>
+                {% elif subtask.task_type == "fetch_infer" %}
+                    <td>Fetch & Inference</td>
+                {% elif subtask.task_type == "infer" %}
+                    <td>Inference</td>
+                {% endif %}
+
+                {% if subtask.task_status == "fetching" %}
+                    <td>Fetch in progress</td>
+                {% elif subtask.task_status == "fetched" %}
+                    <td>Fetching completed</td>
+                {% elif subtask.task_status == "inferencing" %}
+                    <td>Inference in progress</td>
+                {% elif subtask.task_status == "inferenced" %}
+                    <td>Inferencing completed</td>
+                {% endif %}
+
+                <td>{{ subtask.fetch_progress }}%</td>
+                <td>{{ subtask.time_queued }}</td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{subtask.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{subtask.lon_max|floatformat:4}}</span></td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{subtask.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{subtask.lat_max|floatformat:4}}</span></td>
+                <td scope="col"><span class="date">{{subtask.time_from}}</span> to<br><span class="date">{{subtask.time_to}}</span></td>
+                <td><a href="{% url 'fetch_data:task_result' task.task_id %}">Result</a></td>
+            </tr>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+            {% endfor %}
+            <tbody>
+        </table>

@@ -2,6 +2,10 @@
 {% load static %}
 {% load mathfilters %}
 
+{% block head-title %}
+    <title>Task result</title>
+{% endblock %}
+
 {% block head-static %}
 <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/fetch_data/my_or_all_fetches.js' %}"></script>
@@ -14,10 +18,10 @@
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
         <p>This fetch reuested by <span class="username">@{{ task.user_queued}}</span> at <span class="info">{{ task.time_queued }}</span>
-        &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{{task.area_tag}}</span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
+        &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{% for area_tag in task.area_tag.all %}{{ area_tag }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
         </p>
-        <p>Fetch progress: {{ task.fetch_progress }}%</p>
-        <p id="guide">*Click on the row to see fetch parameters</p>
+        <h5>Fetch progress: <span class="result-meta">{{ task.fetch_progress }}%</span>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span class="result-meta">{{ objects|length }}</span> Objects found</h5>
         <table class="table">
             <thead>
             <tr>

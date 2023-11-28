@@ -31,3 +31,7 @@ body {
   /* width: 54px;
   height: 30px; */
 }
+
+#main_icon {
+  content: url("..\\..\\icons\\main_icon.png");
+}

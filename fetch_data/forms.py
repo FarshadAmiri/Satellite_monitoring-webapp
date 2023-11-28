@@ -68,29 +68,29 @@ class SentinelFetchForm(forms.Form):
                 raise forms.ValidationError('Invalid zoom value')
         return zoom
 
-    def clean_start_date(self):
-        start_date = self.cleaned_data['start_date']
-        if start_date is not None:
-            if start_date > datetime.datetime.now().date():
-                raise forms.ValidationError('Start date cannot be a date in future!')
-        return start_date
+    # def clean_start_date(self):
+    #     start_date = self.cleaned_data['start_date']
+    #     if start_date is not None:
+    #         if start_date > datetime.datetime.now().date():
+    #             raise forms.ValidationError('Start date cannot be a date in future!')
+    #     return start_date
 
-    def clean_end_date(self):
-        end_date = self.cleaned_data['end_date']
-        start_date = self.cleaned_data['start_date']
-        if (start_date != None) and (end_date != None):
-            if end_date > datetime.datetime.now().date():
-                raise forms.ValidationError('End date cannot be a date in future!')
-            if end_date < start_date:
-                raise forms.ValidationError('End date cannot be greater than Start date!')
-        return end_date
+    # def clean_end_date(self):
+    #     end_date = self.cleaned_data['end_date']
+    #     start_date = self.cleaned_data['start_date']
+    #     if (start_date != None) and (end_date != None):
+    #         if end_date > datetime.datetime.now().date():
+    #             raise forms.ValidationError('End date cannot be a date in future!')
+    #         if end_date < start_date:
+    #             raise forms.ValidationError('End date cannot be greater than Start date!')
+    #     return end_date
 
-    def clean_n_days_before_base_date(self):
-        n_days_before_base_date = self.cleaned_data['n_days_before_base_date']
-        if n_days_before_base_date != None:
-            if n_days_before_base_date < 0 or n_days_before_base_date > 365:
-                raise forms.ValidationError('Invalid n_days_before_base_date value')
-        return n_days_before_base_date
+    # def clean_n_days_before_base_date(self):
+    #     n_days_before_base_date = self.cleaned_data['n_days_before_base_date']
+    #     if n_days_before_base_date != None:
+    #         if n_days_before_base_date < 0 or n_days_before_base_date > 365:
+    #             raise forms.ValidationError('Invalid n_days_before_base_date value')
+    #     return n_days_before_base_date
 
 
 class Convert2lonlatForm(forms.Form):
