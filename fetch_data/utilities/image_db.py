@@ -1,4 +1,4 @@
-import os
+import os , json
 import cv2
 from tqdm import tqdm
 import logging
@@ -104,7 +104,21 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
                    scale_down_factor=1, sahi_overlap_ratio=0.1, nms_iou_threshold=0.15, device='adaptive', output_dir=None,
                    output_name="prediction", save_annotated_image=False, output_original_image=False, output_annotated_image=True,
                    annotations=["score", "length", "coord"], annotation_font=r"calibri.ttf",annotation_font_size=12, annotation_bbox_width=1)
+        logging.info("Inferencing ended")
         ships_data = detection_results["ships_data"]
+
+        inference_results_coords = detection_results["ships_lon_lat"]
+        inference_results_lengths = detection_results["ships_lengths"]
+        inference_results_scores = detection_results["scores"].tolist()
+        inference_results_bboxes = detection_results["bboxes"].tolist()
+        inference_results = {"coords": inference_results_coords, "lengths": inference_results_lengths,
+                             "scores": inference_results_scores, "bboxes": inference_results_bboxes}
+        inference_results_json = json.dumps(inference_results)
+        child_task.inference_result = inference_results_json
+        child_task.save()
+        print("\n\n\nchild_task.inference_results =", child_task.inference_result, '\n\n\n')
+        del inference_results_coords, inference_results_lengths, inference_results_scores, inference_results_bboxes
+
         annotated_img = detection_results["annotated_image"]
     
         logging.info("Annotated image is being deconcatenated for storing")
@@ -169,14 +183,17 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
 
 
 
-def concatenate_image(x_range, y_range, zoom, start=None, end=None, images_db_path=images_db_path, return_img=True,
+def concatenate_image(x_range, y_range, zoom, start=None, end=None, annotated=False ,images_db_path=images_db_path, return_img=True,
                       save_img=False, save_img_path=concated_images_path):
     date_data = start_end_time_interpreter(start=start, end=end)
     timestamp = date_data["timestamp"]
     path_z = os.path.join(images_db_path, str(int(zoom)))
     images_horizontally = []
     for j in range(y_range[0], y_range[1]+1):
-        images_row_path = [os.path.join(path_z, str(i), str(j), f"{timestamp}.png") for i in range(x_range[0], x_range[1]+1)]
+        if annotated:
+            images_row_path = [os.path.join(path_z, str(i), str(j), f"{timestamp}_annotated.png") for i in range(x_range[0], x_range[1]+1)]
+        else:
+            images_row_path = [os.path.join(path_z, str(i), str(j), f"{timestamp}.png") for i in range(x_range[0], x_range[1]+1)]
         images_row = [np.array(Image.open(img_path)) for img_path in images_row_path]
         images_horizontally.append(cv2.hconcat(images_row))
     concated_image = cv2.vconcat(images_horizontally)

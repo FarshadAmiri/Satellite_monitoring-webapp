@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, DetailView
 from django.http import HttpResponseRedirect, HttpResponse
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
@@ -15,6 +16,7 @@ from PIL import Image
 import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
+import json
 from .forms import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime, territory_tags
 from fetch_data.utilities.image_db import *
@@ -88,6 +90,7 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
             logging.info(f"{(time.perf_counter() - t1):.0f} seconds elapsed to fetch this territory")
         
         parent_task.task_status = "inferenced"
+        parent_task.fetch_progress = 100
         parent_task.save()
     else:
         territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, child_task_id=parent_task_id,
@@ -414,12 +417,8 @@ def TaskResult(request, task_id):
     if request.method=="GET" and request.user.is_authenticated:
         task = QueuedTask.objects.get(task_id=task_id)
         detected_objects = task.detected_objects.all().order_by('-confidence')
-        # if task.is_parent:
-        #     for subtask in task.child_task.all():
-        #         detected_objects = detected_objects.union(subtask.detected_objects.all().order_by('-confidence'))
-        #     detected_objects.order_by('-confidence')
-
-        return render(request, "fetch_data/Task_Result.html", context={'task': task, 'objects': detected_objects, 'user':user})
+        context={'task': task, 'objects': detected_objects,}
+        return render(request, "fetch_data/Task_Result.html", context=context)
 
 
 @login_required(login_url='users:login')
@@ -430,3 +429,39 @@ def ImageGet(request, task_id, image_dir):
     # return HttpResponse(img, content_type="image/png")
     return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
 
+
+@login_required(login_url='users:login')
+def ConcatImage(request, mode, task_id):
+    from fetch_data.utilities.image_db import images_db_path
+    if mode in ['normal', 'annot']:
+        annotated = mode == 'annot'
+    task = QueuedTask.objects.get(task_id=task_id) 
+    x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
+    if (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > 2000:
+        messages.warning(request, "Area is too large for image concatenation!")
+        return HttpResponseRedirect(reverse('fetch_data:task_result' , kwargs={"task_id": task_id,}))
+    start, end = task.time_from, task.time_to
+    concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=annotated, images_db_path=images_db_path, return_img=True,
+                    save_img=False,)
+    concated_img.show()
+    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+
+
+@login_required(login_url='users:login')
+def CustomInference(request, task_id, l_min, l_max):
+    from fetch_data.utilities.imageutils import draw_bbox_torchvision
+    from fetch_data.utilities.image_db import images_db_path
+    task = QueuedTask.objects.get(task_id=task_id)
+    if len(task.child_task_id.all) > 0:  # in case task is a parent with child tasks
+        x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
+        start, end = task.time_from, task.time_to
+        concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=True, images_db_path=images_db_path, return_img=True,
+                        save_img=False,)
+        inference_result = task.inference_result
+        inference_result = json.loads(inference_result)
+        np.array(inference_result.bboxes)
+        draw_bbox_torchvision(concated_img, bboxes, scores, lengths=None, ships_coords=None, annotations=["score", "length", "coord"], save=True,
+                          image_save_name=None, output_annotated_image=False, font_size=14, font=r"calibri.ttf", bbox_width=2, constraints=None)
+        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+    else:
+        pass

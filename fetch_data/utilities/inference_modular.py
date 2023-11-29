@@ -17,7 +17,6 @@ from sahi import AutoDetectionModel
 # a dictionary with bboxes and respected scores after running Slicing Aid Hyper Inference (SAHI) on the image.
 def ship_detection_single_image(image, model_path='models/best_model.pth', bbox_coord_wgs84=None, model_input_dim=768, sahi_confidence_threshold=0.9,
                    sahi_scale_down_factor='adaptive',sahi_overlap_ratio=0.2, nms_iou_threshold=0.1, output_scaled_down_image=True, device='adaptive'):
-    
     # Set pytorch device.
     if device == 'adaptive':
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -134,8 +133,22 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                    scale_down_factor='adaptive', adaptive_scale_down_parameters = {'a': 0.3, 'b': 0.1, 'threshold': 1.5}, sahi_overlap_ratio=0.33,
                    nms_iou_threshold=0.15, device='adaptive', output_dir=None, output_name="prediction",save_annotated_image=False,
                    output_original_image=False, output_annotated_image=True, annotations=["score", "length", "coord"],
-                   annotation_font=r"calibri.ttf",annotation_font_size=14, annotation_bbox_width=2):
+                   annotation_font=r"calibri.ttf",annotation_font_size=14, annotation_bbox_width=2, constraints=None):
     
+    ####### Constraints ########
+    if constraints is not None:
+        constraint_terms = constraints.keys()
+    else:
+        constraint_terms = [None]
+
+    if "length" in constraint_terms:
+        l_min = constraints["length"][0]
+        l_max = constraints["length"][1]
+    else:
+        l_min = 0
+        l_max = 620
+    ####### Constraints ########
+
     # Check data validity (images_dir and images_objects)
     if type(images) == dict:
         inference_mode = "images_dict"
@@ -375,7 +388,7 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                     annotated_image = draw_bbox_torchvision(image=sahi_scaled_down_image, bboxes=bboxes_nms, scores=scores_nms,
                             lengths=result.get("ships_lengths"), ships_coords=result.get("ships_lon_lat"),
                             annotations=annotations, save=save_annotated_image, image_save_name=image_save_name, output_annotated_image=output_annotated_image,
-                            font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width)
+                            font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width, constraints=constraints)
                 if output_annotated_image:
                     result["annotated_image"] = annotated_image
             else:
@@ -385,7 +398,7 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                     annotated_image = draw_bbox_torchvision(image=sahi_scaled_down_image, bboxes=bboxes_nms, scores=scores_nms,
                                     lengths=result[img[0]].get("ships_lengths"), ships_coords=result[img[0]].get("ships_lon_lat"),
                                     annotations=annotations, save=save_annotated_image, image_save_name=image_save_name, output_annotated_image=output_annotated_image,
-                                    font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width)
+                                    font=annotation_font, font_size=annotation_font_size, bbox_width=annotation_bbox_width, constraints=constraints)
                 if output_annotated_image:
                     result[img[0]]["annotated_image"] = annotated_image
     
@@ -396,13 +409,15 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
     
     ships_data = dict()
     for i in range(result["n_obj"]):
-        ships_data[i + 1] = dict()
-        ships_data[i + 1]["lon_lat"] = result["ships_lon_lat"][i]
-        ships_data[i + 1]["length"] = result["ships_lengths"][i]
-        ships_data[i + 1]["confidence"] = result["scores"][i]
-        # ships_data[i]["type"] = result["ships_types"][i]
-        # ships_data[i]["awake"] = result["ships_awake"][i]
-        # ships_data[i]["submarine"] = result["is_submarine"][i]
+        # Constraints check
+        if result["ships_lengths"][i] >= l_min and result["ships_lengths"][i] <= l_max:
+            ships_data[i + 1] = dict()
+            ships_data[i + 1]["lon_lat"] = result["ships_lon_lat"][i]
+            ships_data[i + 1]["length"] = result["ships_lengths"][i]
+            ships_data[i + 1]["confidence"] = result["scores"][i]
+            # ships_data[i]["type"] = result["ships_types"][i]
+            # ships_data[i]["awake"] = result["ships_awake"][i]
+            # ships_data[i]["submarine"] = result["is_submarine"][i]
     result["ships_data"] = ships_data
 
     del model

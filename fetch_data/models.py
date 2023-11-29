@@ -1,5 +1,7 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
+import pytz
 from users.models import User
 from fetch_data.utilities.tools import xyz2bbox_territory, bbox_geometry_calculator, coords_2_xyz_newton
 import datetime
@@ -140,8 +142,11 @@ class QueuedTask(models.Model):
     time_from = models.DateField()
     time_to = models.DateField()
 
-    time_queued = models.DateTimeField(default = datetime.datetime.now() + datetime.timedelta(hours=3, minutes=30))
+    # time_queued = models.DateTimeField(default = datetime.datetime.now() + datetime.timedelta(hours=3, minutes=30))
+    # time_queued = models.DateTimeField(default=timezone.localtime(timezone.now()))
+    time_queued = models.DateTimeField(auto_now_add=True)
     task_description = models.CharField(max_length=256)
+    inference_result = models.JSONField(null=True, blank=True)
 
 
 class DetectedObject(models.Model):

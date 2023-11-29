@@ -15,6 +15,13 @@
 {% block body %}
 
 <div class="container">
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
         <p>This fetch reuested by <span class="username">@{{ task.user_queued}}</span> at <span class="info">{{ task.time_queued }}</span>
@@ -22,6 +29,10 @@
         </span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
         </p>
         <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span class="result-meta">{{ objects|length }}</span> Objects  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Status: {% if task.task_status == "fetching" %}<span>Fetch in progress</span>{% elif task.task_status == "fetched" %}<span>Fetching completed</span>{% elif task.task_status == "inferencing" %}<span>Inference in progress</span>{% elif task.task_status == "inferenced" %}<span>Inferencing completed</span>{% endif %}</h5>
+        <a class="btn btn-primary" href="{% url 'fetch_data:image_concat' 'normal' task.task_id %}">Area's image</a>
+        <a class="btn btn-success" href="{% url 'fetch_data:image_concat' 'annot' task.task_id %}">Area's image + annotations</a>
+        {% comment %} <button class="btn btn-secondary" onclick="{% url 'fetch_data:image_concat' 'normal' task.task_id %}">Concat</button> {% endcomment %}
+        {% comment %} <button class="btn btn-primary" onclick="{% url 'fetch_data:image_concat' 'annot' task.task_id %}">Concat - annotated</button> {% endcomment %}
         <table class="table">
             <thead>
             <tr>

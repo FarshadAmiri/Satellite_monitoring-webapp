@@ -340,8 +340,8 @@ def draw_bboxes_2(image, bbox_list, score_list, length_list=None, output_file_na
 
 
 
-def draw_bbox_torchvision(image, bboxes, scores, lengths=None,ships_coords=None, annotations=["score", "length", "coord"],
-                           save=True, image_save_name=None, output_annotated_image=False, font_size=14, font=r"calibri.ttf", bbox_width=2):
+def draw_bbox_torchvision(image, bboxes, scores, lengths=None, ships_coords=None, annotations=["score", "length", "coord"], save=True,
+                          image_save_name=None, output_annotated_image=False, font_size=14, font=r"calibri.ttf", bbox_width=2, constraints=None):
     # w, h = image.size
     # thick = int((h + w) // 512)
     # font_size = int((h + w) // 64)
@@ -349,7 +349,28 @@ def draw_bbox_torchvision(image, bboxes, scores, lengths=None,ships_coords=None,
     #     n_space = 7
     # elif font_size == 10:
     #     n_space = 10
+
+    ####### Constraints ########
+    if constraints is not None:
+        constraint_terms = constraints.keys()
+    else:
+        constraint_terms = [None]
+
+    if "length" in constraint_terms:
+        l_min = constraints["length"][0]
+        l_max = constraints["length"][1]
+    else:
+        l_min = 0
+        l_max = 700
     
+    constraints_mask = [((length >= l_min) and (length <= l_max)) for length in lengths]
+
+    lengths = [length for idx, length in enumerate(lengths) if constraints_mask[idx] == True ]
+    bboxes =  np.array([bbox for idx, bbox in enumerate(bboxes) if constraints_mask[idx] == True ])
+    scores =  np.array([score for idx, score in enumerate(scores) if constraints_mask[idx] == True ])
+    ships_coords =  [ships_coord for idx, ships_coord in enumerate(ships_coords) if constraints_mask[idx] == True ]
+    ####### Constraints ########
+
     n_space = int(80 / font_size ) + 2
 
     colors = [(255, 255, 255), (150, 255, 150), (255, 130, 0), (240, 240, 0), (200, 70, 255),  (0, 255, 0), (200, 255, 180), 
