@@ -9,10 +9,14 @@
    {% block head-title %}
       <title>Fetch data</title>
    {% endblock %}
-   <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-   <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
-   <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/base.css' %}">
-   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    {% block head-static-essential %}
+    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/base.css' %}">
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% endblock %}
+
    {% block head-static %}
    {% endblock %}
 </head>

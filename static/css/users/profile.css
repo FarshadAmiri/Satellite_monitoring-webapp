@@ -1,0 +1,19 @@
+body {
+  background-image: url("\\static\\bcg\\earth1.jpg");
+  /* background-image: url('https://wallpapercrafter.com/th800/124985-3D-render-space-satellite-Earth-orbital-view.jpg'); Replace with the path to your background image */
+  background-size: cover;
+  background-position: center;
+  /* Add other CSS properties as needed */
+}
+
+.username {
+  color: rgb(58, 60, 219);
+  font-size: 32px;
+  font-weight: bold;
+  }
+
+  .info {
+    color: rgb(182, 71, 43);
+    font-size: 32px;
+    font-weight: bold;
+    }

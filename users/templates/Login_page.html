@@ -1,39 +1,5 @@
 {% load static %}
- {% comment %} {% extends "fetch_data\base.html" %}
 
-{% block navbar %}
-{% endblock %} {% endcomment %}
-
-{% comment %}
-{% block head-title %}
-    <title>Login</title>
-{% endblock %}
-
-
-{% block body %}
-    {% if message %}
-        <h2>{{ message }}</h2>
-    {% endif %}
-    <div class="container">
-        <div class="row" style="padding: 25px; border-radius: 25px; background-color: #DFF3FF; margin: 6px">
-            <div class="col-4">
-            </div>
-            <div class="col-4" style="background-color: #DFF3FF ; padding: 50px; border-radius: 25px;">
-                <h2 id="box_title">Login</h2>
-                <form action="{% url 'users:login' %}" method='post'>
-                    {% csrf_token %}
-                    <input type="text" name="username" placeholder="Username">
-                    <input type="password" name="password" placeholder="Password">
-                    <input type="submit" Value="Log in">
-                </form>
-            </div>
-            <div class="col-4">
-            </div>
-        </div>
-{% endblock %} {% endcomment %}
-
-{% comment %} <script type="text/javascript" src="{% static 'js/users/login.js' %}"></script> {% endcomment %}
-{% comment %} <link rel="stylesheet" type="text/css" href="{% static 'css/users/login.css' %}"> {% endcomment %}
 <!DOCTYPE html>
 <html lang="en">
 <head>

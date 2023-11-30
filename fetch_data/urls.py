@@ -14,5 +14,5 @@ urlpatterns = [
     path("api-territory_fetch", territory_fetch_APIView.as_view()),
     path('img/task?<str:task_id>/img?<str:image_dir>', ImageGet, name='image_get'),
     path('concat_img/mode?<str:mode>?task?<str:task_id>', ConcatImage, name='image_concat'),
-    path('custom_infer/task?<str:task_id>/L(<int:l_min>,<int:l_max>)', ConcatImage, name='image_concat'),
+        path('custom_annotation/task?<str:task_id>', CustomAnnotation, name='custom_annotation'),
 ]

@@ -7,14 +7,35 @@
 {% endblock %}
 
 {% block head-static %}
-<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/fetch_data/task_result.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/task_result.css' %}">
+<script type="text/javascript" src="{% static 'jquery-3.7.1.min.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/fetch_data/base.css' %}">
+<script type="text/javascript" src="{% static 'js/fetch_data/task_result.js' %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static 'css/datatables.css' %}">
+<script type="text/javascript" src="{% static 'js/datatables.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
+<style>
+.sortable {
+  cursor: pointer;
+}
+
+.sorted-asc::after {
+  content: "▲";
+}
+
+.sorted-desc::after {
+  content: "▼";
+}
+</style>
 {% endblock %}
+
 
 {% block body %}
 
-<div class="container">
+<div class="container-fluid" style="padding-left: 200px; padding-right: 200px">
 {% if messages %}
     {% for message in messages %}
         <div class="alert alert-danger" role="alert">
@@ -23,22 +44,64 @@
     {% endfor %}
 {% endif %}
 <div class="row" style="padding: 25px; border-radius: 25px; background-color: #ffffff; margin: 6px">
+<div class="row">
     <div class="col-12" style="background-color: #ffffff ; padding: 20px; padding-bottom: 10px; border-radius: 25px;">
         <p>This fetch reuested by <span class="username">@{{ task.user_queued}}</span> at <span class="info">{{ task.time_queued }}</span>
         &nbsp &nbsp &nbsp Area tag: <span class="lonlat">{% for area_tag in task.area_tag.all %}{{ area_tag }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </span> &nbsp &nbsp &nbsp Lon: <span class="lonlat">{{ task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lon_max|floatformat:4 }}</span> &nbsp &nbsp &nbsp Lat: <span class="lonlat">{{ task.lat_min|floatformat:4 }}</span> to <span class="lonlat">{{ task.lat_max|floatformat:4 }}</span>
         </p>
-        <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span>&nbsp &nbsp &nbsp &nbsp &nbsp &nbsp <span class="result-meta">{{ objects|length }}</span> Objects  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp Status: {% if task.task_status == "fetching" %}<span>Fetch in progress</span>{% elif task.task_status == "fetched" %}<span>Fetching completed</span>{% elif task.task_status == "inferencing" %}<span>Inference in progress</span>{% elif task.task_status == "inferenced" %}<span>Inferencing completed</span>{% endif %}</h5>
-        <a class="btn btn-primary" href="{% url 'fetch_data:image_concat' 'normal' task.task_id %}">Area's image</a>
-        <a class="btn btn-success" href="{% url 'fetch_data:image_concat' 'annot' task.task_id %}">Area's image + annotations</a>
-        {% comment %} <button class="btn btn-secondary" onclick="{% url 'fetch_data:image_concat' 'normal' task.task_id %}">Concat</button> {% endcomment %}
-        {% comment %} <button class="btn btn-primary" onclick="{% url 'fetch_data:image_concat' 'annot' task.task_id %}">Concat - annotated</button> {% endcomment %}
-        <table class="table">
+        </div>
+        </div>
+        <div class="row">
+        <div class="col-4">
+        <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span></h5>
+        </div>
+        <div class="col-4">
+            <h5><span class="result-meta">{{ objects|length }}</span> Objects founded</h5>
+        </div>
+        <div class="col-4">
+         <h5><span>{% if task.task_status == "fetching" %}<span>Fetch in progress</span>{% elif task.task_status == "fetched" %}<span>Fetching completed</span>{% elif task.task_status == "inferencing" %}<span>Inference in progress</span>{% elif task.task_status == "inferenced" %}<span>Inferencing completed</span>{% endif %}</span></h5>
+        </div>
+        </div>
+<div class="row">
+    <div class="col-4">
+        <div class="button-group">
+            <a class="btn btn-primary" href="{% url 'fetch_data:image_concat' 'normal' task.task_id %}">Area's image</a>
+            <a class="btn btn-success" href="{% url 'fetch_data:image_concat' 'annot' task.task_id %}">Area's image + annotations</a>
+        </div>
+    </div>
+    <div class="col-4"></div>
+    <div class="col-4">
+        <form action="{% url 'fetch_data:custom_annotation' task.task_id %}" method="POST" class="custom-annotation-form">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="row">
+                        <div class="col-4">
+                            <label for="l_min">L min</label>
+                            <input type="number" class="form-control form-control-sm" id="l_min" name="l_min">
+                        </div>
+                        <div class="col-4">
+                            <label for="l_max">L max</label>
+                            <input type="number" class="form-control form-control-sm" id="l_max" name="l_max">
+                        </div>
+                        <div class="col-4">
+                            <button type="submit" class="btn btn-primary" style="padding: 2px">Custom annotations</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+        <table class="table table-responsive" style="margin-top: 10px" id="example">
+        {% comment %} <table id="dtBasicExample" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%"> {% endcomment %}
+        {% comment %} <table id="example" class="table table-striped table-bordered" cellspacing="0" width="100%"> {% endcomment %}
             <thead>
             <tr>
                 <th scope="col">#</th>
                 <th scope="col">Watercraft type</th>
-                <th scope="col">Length</th>
+                <th scope="col" class="sortable" data-sort-field="2">Length</th>
                 <th scope="col">Awake</th>
                 <th scope="col">Confidence</th>
                 <th scope="col">Lon</th>
@@ -55,13 +118,7 @@
                 <td>{{ obj.confidence|mul:100|floatformat:1 }}%</td>
                 <td>{{ obj.lon|floatformat:6}}</td>
                 <td>{{ obj.lat|floatformat:6 }}</td>
-                {% comment %} <td><a class="image-link" href="../../static/icons/main_icon.png">image</a></td> {% endcomment %}
-                {% comment %} <td><a class="image-link" href="../../SatteliteImages_db/14/10757/6918/2023-11-17_2023-11-27_annotated.png">image</a></td> {% endcomment %}
-                {% comment %} <td><a class="image-link" href="https://cdn.shopify.com/s/files/1/2018/8867/files/matteo-paganelli-39971_530x.jpg">image</a></td> {% endcomment %}
-                <td><a href="{% url 'fetch_data:image_get' task.task_id obj.image %}">Image</a></td>
-                {% comment %} <td><img src="{% url 'fetch_data:image_get' obj.image %}" style="height:35px; width:54px"></a></td> {% endcomment %}
-                {% comment %} <td><img src="{{ obj.image }}">image</a></td> {% endcomment %}
-                {% comment %} <td>{{ obj.image }}</td> {% endcomment %}
+                <td><a href="{% url 'fetch_data:image_get' task.task_id obj.image %}">Watercraft_#_{{ forloop.counter | stringformat:"03d" | slice:"-3:" }}</a></td>
             </tr>
             <tr class="collapse details-row">
             <td colspan="5">

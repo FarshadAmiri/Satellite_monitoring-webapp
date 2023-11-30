@@ -16,13 +16,14 @@ from PIL import Image
 import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
-import json
+import json , numpy as np
 from .forms import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime, territory_tags
 from fetch_data.utilities.image_db import *
 from .serializers import *
 
 fetch_chunk_size=25
+concat_size_limit = 10000
 
 
 # @shared_task
@@ -437,7 +438,7 @@ def ConcatImage(request, mode, task_id):
         annotated = mode == 'annot'
     task = QueuedTask.objects.get(task_id=task_id) 
     x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
-    if (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > 2000:
+    if (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > concat_size_limit:
         messages.warning(request, "Area is too large for image concatenation!")
         return HttpResponseRedirect(reverse('fetch_data:task_result' , kwargs={"task_id": task_id,}))
     start, end = task.time_from, task.time_to
@@ -447,21 +448,36 @@ def ConcatImage(request, mode, task_id):
     return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
 
 
+
 @login_required(login_url='users:login')
-def CustomInference(request, task_id, l_min, l_max):
+def CustomAnnotation(request, task_id):
     from fetch_data.utilities.imageutils import draw_bbox_torchvision
     from fetch_data.utilities.image_db import images_db_path
+    l_min = request.POST.get('l_min')
+    l_max = request.POST.get('l_max')
+    l_min = 0 if l_min in [None, "", " "] else l_min
+    l_max = 700 if l_max in [None, "", " "] else l_max
+    l_min, l_max = int(l_min), int(l_max)
+    print("\n\n\nL Min: ", l_min)
+    print("\n\n\nL Max: ", l_max)
     task = QueuedTask.objects.get(task_id=task_id)
-    if len(task.child_task_id.all) > 0:  # in case task is a parent with child tasks
-        x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
+    x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
+    if (len(task.child_task.all()) == 0) or ((x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > concat_size_limit):  # in case task is a child or is a parent with relative normal size (not excessive large size)
         start, end = task.time_from, task.time_to
-        concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=True, images_db_path=images_db_path, return_img=True,
+        concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=False, images_db_path=images_db_path, return_img=True,
                         save_img=False,)
         inference_result = task.inference_result
         inference_result = json.loads(inference_result)
-        np.array(inference_result.bboxes)
-        draw_bbox_torchvision(concated_img, bboxes, scores, lengths=None, ships_coords=None, annotations=["score", "length", "coord"], save=True,
-                          image_save_name=None, output_annotated_image=False, font_size=14, font=r"calibri.ttf", bbox_width=2, constraints=None)
+        bboxes = np.array(inference_result["bboxes"])
+        scores = np.array(inference_result["scores"])
+        ships_coords = inference_result["coords"]
+        lengths = inference_result["lengths"]
+        constraints = dict()
+        constraints["length"] = (l_min, l_max)
+        custom_inferenced_img = draw_bbox_torchvision(concated_img, bboxes, scores, lengths=lengths, ships_coords=ships_coords, annotations=["score", "length", "coord"], save=False,
+                          image_save_name=None, output_annotated_image=True, font_size=14, font=r"calibri.ttf", bbox_width=2, constraints=constraints)
+        custom_inferenced_img.show()
         return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
     else:
-        pass
+        messages.warning(request, "Area is too large for custom inferencing!")
+        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
