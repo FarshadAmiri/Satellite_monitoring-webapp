@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -18,6 +19,7 @@ from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
 import json , numpy as np
 from .forms import *
+from .models import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime, territory_tags
 from fetch_data.utilities.image_db import *
 from .serializers import *
@@ -38,7 +40,15 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
     subtasks = False if len(territories) == 1 else True
     logging.info(f"\nterritories:\n{territories}\n")
 
-    parent_task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
+    last_internal_variables = InternalVariables.objects.first()
+    if last_internal_variables == None:
+        last_internal_variables = InternalVariables.objects.create(last_task_id=0)
+    last_task_id = last_internal_variables.last_task_id
+    parent_task_id = str(int(last_task_id) + 1)
+    last_internal_variables.last_task_id = int(parent_task_id)
+    last_internal_variables.save()
+
+    # parent_task_id = f"{user.username}-[{lon_min},{lat_min},{lon_max},{lat_max}]-({start_date}_{end_date})-q_{get_current_datetime()}"
     task_ids = [f"{parent_task_id}_part{i+1}" for i in range(len(territories))]
     task_type = "fetch_infer" if inference else "fetch"
 
@@ -46,7 +56,6 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
                            lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
                            zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
                            time_from=start_date, time_to=end_date, user_queued=user,)
-    # detected_objects = parent_task.detected_objects.all().order_by('-confidence')
     
     territory_coords_parent = (lon_min, lat_min, lon_max, lat_max)
     area_tags_parent = territory_tags(territory_coords_parent, margin_neglect=0.01)
@@ -196,7 +205,7 @@ def territory_fetch(request):
             ### End QueuedTask lines
             # fetch(territories, task_ids, task_type, x_min, x_max, y_min, y_max, zoom, start_date, end_date,
             #       overwrite_repetitious, inference, save_concated, lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max,)
-            t0 = time.perf_counter()
+            # t0 = time.perf_counter()
             fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated,
                   lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, user=user)
 
@@ -209,7 +218,8 @@ def territory_fetch(request):
             
             # fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id,
             # overwrite_repetitious, inference, save_concated)
-            logging.info(f"{(time.perf_counter() - t0):.0f} seconds elapsed to fetch all territories")
+            # logging.info(f"{(time.perf_counter() - t0):.0f} seconds elapsed to fetch all territories")
+            logging.info(f"All territories fetched")
             return render(request, "fetch_data/success.html", context={"form_cleaned_data": form.cleaned_data})
         else:
             return render(request, "fetch_data/error.html", context={'errors': form.errors})
@@ -384,32 +394,30 @@ def ConvertView(request):
 
             return render(request, "fetch_data/Conversions.html", context={'form_2xy': form_2xy,
             "form_2lonlat": form_2lonlat, 'convert_2xy_res': convert_2xy_res, 'user':request.user})
-
-
-@login_required(login_url='users:login')
-def MyTasksView(request, time_limit):
-    user = request.user
-    if request.method=="GET" and request.user.is_authenticated:
-        time_limit = datetime.datetime.today() - timedelta(days=time_limit)
-        parent_tasks =  QueuedTask.objects.filter(user_queued=user, is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
-        tasks_list = [[task] for task in parent_tasks]
-        for idx, parent_task in enumerate(parent_tasks):
-            children_tasks = parent_task.child_task.all().order_by('time_queued')
-            tasks_list[idx].extend(children_tasks)
-        return render(request, "fetch_data/Fetches_table.html", context={'tasks_list': tasks_list, 'user':user})
     
 
 @login_required(login_url='users:login')
-def AllTasksView(request, time_limit):
+def TasksTable(request, mode, time_limit):
     user = request.user
     if request.method=="GET" and request.user.is_authenticated:
         time_limit = datetime.datetime.today() - timedelta(days=time_limit)
-        parent_tasks =  QueuedTask.objects.filter(is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
-        tasks_list = [[task] for task in parent_tasks]
-        for idx, parent_task in enumerate(parent_tasks):
-            children_tasks = parent_task.child_task.all().order_by('time_queued')
-            tasks_list[idx].extend(children_tasks)
-        return render(request, "fetch_data/Fetches_table.html", context={'tasks_list': tasks_list, 'user':user, 'all_tasks': True})
+        if mode == 'my':
+            all_parent_tasks =  QueuedTask.objects.filter(user_queued=user, is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
+            all_tasks = False
+        elif mode == 'all':
+            all_parent_tasks =  QueuedTask.objects.filter(is_parent=True, time_queued__gt=time_limit).order_by('-time_queued')
+            all_tasks = True
+        paginator = Paginator(all_parent_tasks, 5)
+        num_pages = paginator.num_pages
+        page_number = request.GET.get('page')
+        try:
+            page_parent_tasks = paginator.get_page(page_number)  # returns the desired page object
+        except PageNotAnInteger:   # if page_number is not an integer then assign the first page
+            page_parent_tasks = paginator.page(1)
+        except EmptyPage:    # if page is empty then return last page
+            page_parent_tasks = paginator.page(paginator.num_pages)
+
+        return render(request, "fetch_data/Fetches_table.html", context={'page_parent_tasks': page_parent_tasks, 'user':user, 'all_tasks': all_tasks, "num_pages": num_pages})
 
 
 @login_required(login_url='users:login')
@@ -417,8 +425,18 @@ def TaskResult(request, task_id):
     user = request.user
     if request.method=="GET" and request.user.is_authenticated:
         task = QueuedTask.objects.get(task_id=task_id)
-        detected_objects = task.detected_objects.all().order_by('-confidence')
-        context={'task': task, 'objects': detected_objects,}
+        detected_objects = task.detected_objects.all().order_by('-length')
+        n_objects = len(detected_objects)
+        paginator = Paginator(detected_objects, 50)
+        num_pages = paginator.num_pages
+        page_number = request.GET.get('page')
+        try:
+            page_objects = paginator.get_page(page_number)  # returns the desired page object
+        except PageNotAnInteger:   # if page_number is not an integer then assign the first page
+            page_objects = paginator.page(1)
+        except EmptyPage:    # if page is empty then return last page
+            page_objects = paginator.page(paginator.num_pages)
+        context={'task': task, 'page_objects': page_objects, "n_objects": n_objects, "num_pages": num_pages,}
         return render(request, "fetch_data/Task_Result.html", context=context)
 
 
@@ -462,7 +480,8 @@ def CustomAnnotation(request, task_id):
     print("\n\n\nL Max: ", l_max)
     task = QueuedTask.objects.get(task_id=task_id)
     x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
-    if (len(task.child_task.all()) == 0) or ((x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > concat_size_limit):  # in case task is a child or is a parent with relative normal size (not excessive large size)
+    concated_size = (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1)
+    if (len(task.child_task.all()) == 0) or (concated_size < concat_size_limit):  # in case task is a child or is a parent with relative normal size (not excessive large size)
         start, end = task.time_from, task.time_to
         concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=False, images_db_path=images_db_path, return_img=True,
                         save_img=False,)
@@ -479,5 +498,5 @@ def CustomAnnotation(request, task_id):
         custom_inferenced_img.show()
         return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
     else:
-        messages.warning(request, "Area is too large for custom inferencing!")
+        messages.warning(request, f"Area is too large for custom inferencing! This area consists of {concated_size} tiles while there is a limitation of {concat_size_limit} tiles to be concatenated on server.")
         return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))

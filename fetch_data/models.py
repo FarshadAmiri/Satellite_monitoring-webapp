@@ -119,7 +119,8 @@ class QueuedTask(models.Model):
     TASK_TYPES = [('fetch', 'fetch'), ('infer', 'inference'), ('fetch_infer', 'fetch_and_inference')]
     TASK_STATUS = [('fetching', 'fetch_in_progress'), ('fetched', 'fetched'), ('inferencing', 'inference_in_progress'), ('inferenced', 'inferenced')]
 
-    task_id = models.CharField(primary_key=True, max_length=255)
+    # task_id = models.AutoField(primary_key=True,)
+    task_id = models.CharField(primary_key=True, max_length=30)
     is_parent = models.BooleanField(null=True)
     child_task = models.ManyToManyField("self", null=True, symmetrical=False, related_name='parent_task',)
     user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
@@ -166,3 +167,7 @@ class DetectedObject(models.Model):
 
     def __str__(self):
         return f'{self.id}'
+    
+
+class InternalVariables(models.Model):
+    last_task_id = models.IntegerField(null=True, blank=True)

@@ -103,7 +103,8 @@ def territory_fetch_inference(x_range, y_range, zoom, start_date, end_date, chil
         detection_results = ship_detection(concated_img, model_or_model_path=model_path, bbox_coord_wgs84=coords, model_input_dim=768, confidence_threshold=0.9,
                    scale_down_factor=1, sahi_overlap_ratio=0.1, nms_iou_threshold=0.15, device='adaptive', output_dir=None,
                    output_name="prediction", save_annotated_image=False, output_original_image=False, output_annotated_image=True,
-                   annotations=["score", "length", "coord"], annotation_font=r"calibri.ttf",annotation_font_size=12, annotation_bbox_width=1)
+                   annotations=["score", "length", "coord"], annotation_font=r"calibri.ttf",annotation_font_size=12, annotation_bbox_width=1,
+                   constraints={"length": (10,620)})
         logging.info("Inferencing ended")
         ships_data = detection_results["ships_data"]
 

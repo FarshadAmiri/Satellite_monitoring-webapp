@@ -58,20 +58,20 @@
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item" >
-                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:allfetches' time_limit=60 %}">All Fetches</a>
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:tasks_table' mode='all' time_limit=60 %}">All Fetches</a>
                     </li>
                     <li class="nav-item" >
-                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:myfetches' time_limit=60 %}">My Fetches</a>
+                        <a class="nav-link active" id="nav_item" aria-current="page" href="{% url 'fetch_data:tasks_table' mode='my' time_limit=60 %}">My Fetches</a>
                     </li>
                     <li class="nav-item">
                         {% if not request.user.is_authenticated %}
-                            <a href="{% url 'users:login' %}" style="font-size: 16px; margin: 3px" class="btn btn-success" type="button">Log in</a>
+                            <a href="{% url 'users:login' %}" style="font-size: 17px; margin: 3px" class="btn btn-success" type="button">Log in</a>
                         {% else %}
-                            <a href="{% url 'users:profile' %}" style="font-size: 16px; margin: 3px" class="btn btn-primary" type="button">@{{user.username}}</a>
+                            <a href="{% url 'users:profile' %}" style="font-size: 17px; margin: 4px; padding: 6px" class="btn btn-primary" type="button">@{{user.username}}</a>
                         {% endif %}
                     </li>
                     <li class="nav-item">
-                        <a href="{% url 'users:logout' %}" style="font-size: 16px; margin: 3px" class="btn btn-danger" type="button">Log out</a>
+                        <a href="{% url 'users:logout' %}" style="font-size: 17px; margin: 4px; padding: 6px" class="btn btn-danger" type="button">Log out</a>
                     </li>
                 </ul>
             </div>

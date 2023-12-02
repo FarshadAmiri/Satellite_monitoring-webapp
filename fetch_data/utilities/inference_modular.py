@@ -133,7 +133,7 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                    scale_down_factor='adaptive', adaptive_scale_down_parameters = {'a': 0.3, 'b': 0.1, 'threshold': 1.5}, sahi_overlap_ratio=0.33,
                    nms_iou_threshold=0.15, device='adaptive', output_dir=None, output_name="prediction",save_annotated_image=False,
                    output_original_image=False, output_annotated_image=True, annotations=["score", "length", "coord"],
-                   annotation_font=r"calibri.ttf",annotation_font_size=14, annotation_bbox_width=2, constraints=None):
+                   annotation_font=r"calibri.ttf",annotation_font_size=14, annotation_bbox_width=2, constraints={"length": (10,620)}):
     
     ####### Constraints ########
     if constraints is not None:
@@ -142,11 +142,11 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
         constraint_terms = [None]
 
     if "length" in constraint_terms:
-        l_min = constraints["length"][0]
-        l_max = constraints["length"][1]
-    else:
-        l_min = 0
-        l_max = 620
+        try:
+            l_min = int(constraints["length"][0])
+            l_max = int(constraints["length"][1])
+        except:
+            raise ValueError("constraints should be a dictionary containing a key 'length' and a value which is a list or tuple of two integers.")
     ####### Constraints ########
 
     # Check data validity (images_dir and images_objects)
@@ -351,7 +351,6 @@ def ship_detection(images, model_or_model_path='models/best_model.pth', bbox_coo
                 
                 ship_longitude = (((bbox_x1 + bbox_x2) * (lon2 - lon1)) / (2 * w_resized)) + lon1
                 ship_longitude = round(ship_longitude, 12)
-                # ship_latitude = (((bbox_y1 + bbox_y2) * (lat2 - lat1)) / (2 * h_resized)) + lat1
                 ship_latitude = lat2 - (((bbox_y1 + bbox_y2) * (lat2 - lat1)) / (2 * h_resized))
                 ship_latitude = round(ship_latitude, 12)
                 ships_coord.append((ship_longitude, ship_latitude))
