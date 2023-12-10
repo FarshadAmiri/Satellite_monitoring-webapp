@@ -174,3 +174,9 @@ tfoot tr {
     content: "Awake";
   }
 }
+
+.result-meta-purple {
+  color: rgb(93, 10, 126);
+  font-weight: bolder; 
+  font-size: 26px
+}

@@ -37,55 +37,55 @@
             </tr>
             </thead>
             <tbody>
-            {% for parent_task in page_parent_tasks %}
+            {% for main_task in page_parent_tasks %}
             <tr class="clickable parent-task" data-toggle="collapse" id="parent-row{{ forloop.counter0 }}" data-target=".child-row{{ forloop.counter0 }}" aria-expanded="true" aria-controls=".child-row{{ forloop.counter0 }}">
-                {% if parent_task.child_task.all|length > 0 %}
-                <td>{{ parent_task.task_id }}&nbsp<img id="chevron-down"></td>
+                {% if main_task.is_parent %}
+                <td>{{ main_task.task_id }}&nbsp<img id="chevron-down"></td>
                 {% else %}
-                <td>{{ parent_task.task_id }}</td>
+                <td>{{ main_task.task_id }}</td>
                 {% endif %}
                 {% if all_tasks %}
-                    <td class="username">@{{parent_task.user_queued}}</td>
+                    <td class="username">@{{main_task.user_queued}}</td>
                 {% endif %}
                 {% comment %} <td class="info">{{task.area_tag.all()}}</td> {% endcomment %}
                 <td class="info">
-                {% for area_tag in parent_task.area_tag.all %}
+                {% for area_tag in main_task.area_tag.all %}
                     {{ area_tag }}
                     {% if not forloop.last %}, {% endif %}
                 {% endfor %}
                 </td>
-                {% if parent_task.task_type == "fetch" %}
+                {% if main_task.task_type == "fetch" %}
                     <td>Fetch</td>
-                {% elif parent_task.task_type == "fetch_infer" %}
+                {% elif main_task.task_type == "fetch_infer" %}
                     <td>Fetch & Inference</td>
-                {% elif parent_task.task_type == "infer" %}
+                {% elif main_task.task_type == "infer" %}
                     <td>Inference</td>
                 {% endif %}
 
-                {% if parent_task.task_status == "fetching" %}
+                {% if main_task.task_status == "fetching" %}
                     <td>Fetch in progress</td>
-                {% elif parent_task.task_status == "fetched" %}
+                {% elif main_task.task_status == "fetched" %}
                     <td>Fetching completed</td>
-                {% elif parent_task.task_status == "inferencing" %}
+                {% elif main_task.task_status == "inferencing" %}
                     <td>Inference in progress</td>
-                {% elif parent_task.task_status == "inferenced" %}
+                {% elif main_task.task_status == "inferenced" %}
                     <td>Inferencing completed</td>
                 {% endif %}
 
-                <td>{{ parent_task.fetch_progress }}%</td>
-                <td>{{ parent_task.time_queued }}</td>
-                <td scope="col"><span>Min: </span><span class="lonlat">{{parent_task.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{parent_task.lon_max|floatformat:4}}</span></td>
-                <td scope="col"><span>Min: </span><span class="lonlat">{{parent_task.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{parent_task.lat_max|floatformat:4}}</span></td>
-                <td scope="col"><span class="date">{{parent_task.time_from}}</span> to<br><span class="date">{{parent_task.time_to}}</span></td>
-                <td class="bold_number">{{parent_task.detected_objects.all|length}}</td>
-                <td><a href="{% url 'fetch_data:task_result' parent_task.task_id %}">Result</a></td>
+                <td>{{ main_task.fetch_progress }}%</td>
+                <td>{{ main_task.time_queued }}</td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{main_task.lon_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{main_task.lon_max|floatformat:4}}</span></td>
+                <td scope="col"><span>Min: </span><span class="lonlat">{{main_task.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{main_task.lat_max|floatformat:4}}</span></td>
+                <td scope="col"><span class="date">{{main_task.time_from}}</span> to<br><span class="date">{{main_task.time_to}}</span></td>
+                <td class="bold_number">{{main_task.detected_objects.all|length}}</td>
+                <td><a href="{% url 'fetch_data:task_result' task_id=main_task.task_id filters=None %}">Result</a></td>
             </tr>
-            {% if parent_task.child_task.all|length > 0 %}
-            {% for child_task in parent_task.child_task.all|dictsort:"time_queued" %}
+            {% if main_task.is_parent %}
+            {% for child_task in main_task.child_task.all|dictsort:"time_queued" %}
             <tr class="child-task">
                 <td>{{ child_task.task_id}}</td>
                 {% if all_tasks %}
-                    <td class="username">@{{parent_task.user_queued}}</td>
+                    <td class="username">@{{main_task.user_queued}}</td>
                 {% endif %}
                 <td class="info">
                 {% if child_task.area_tag.all|length > 0 %}
@@ -121,7 +121,7 @@
                 <td scope="col"><span>Min: </span><span class="lonlat">{{child_task.lat_min|floatformat:4 }}</span><br><span>Max: </span><span class="lonlat">{{child_task.lat_max|floatformat:4}}</span></td>
                 <td scope="col"><span class="date">{{child_task.time_from}}</span> to<br><span class="date">{{child_task.time_to}}</span></td>
                 <td class="bold_number">{{child_task.detected_objects.all|length}}</td>
-                <td><a href="{% url 'fetch_data:task_result' child_task.task_id %}">Result</a></td>
+                <td><a href="{% url 'fetch_data:task_result' task_id=child_task.task_id filters=None %}">Result</a></td>
             </tr>
                 {% comment %} <div class="details-content">
                     <p>Lon: <span class="lonlat">{{task.lon_min|floatformat:4 }}</span> to <span class="lonlat">{{task.lon_max|floatformat:4}}</span>

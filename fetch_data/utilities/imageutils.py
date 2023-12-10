@@ -390,15 +390,15 @@ def draw_bbox_torchvision(image, bboxes, scores, lengths=None, ships_coords=None
     # Generating labels
     labels = [" "*n_space for idx in range(len(scores))]
     if "score" in annotations:
-        labels = [f"{labels[idx]}{scores[idx]:.2f}  "  for idx in range(len(labels))]
+        labels = [f"{labels[idx]}\n{' '*n_space}Score: {scores[idx]:.2f}  "  for idx in range(len(labels))]
     if "length" in annotations:
         if lengths != None:
             labels = [f"{labels[idx]}L: {lengths[idx]:.0f}" for idx in range(len(labels))]
     if "coord" in annotations:
         if ships_coords !=None:
             ships_coords = tuple(map(lambda x: (round(x[0], 4), round(x[1], 4)), ships_coords))
-            labels = [f"{labels[idx]}\n{' '*n_space}Lon: {ships_coords[idx][0]}" for idx in range(len(labels))]
             labels = [f"{labels[idx]}\n{' '*n_space}Lat: {ships_coords[idx][1]}" for idx in range(len(labels))]
+            labels = [f"{labels[idx]}\n{' '*n_space}Lon: {ships_coords[idx][0]}" for idx in range(len(labels))]
 
     # draw bounding boxes with fill color
     try:

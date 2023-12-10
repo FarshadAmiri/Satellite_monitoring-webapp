@@ -122,7 +122,7 @@ class QueuedTask(models.Model):
     # task_id = models.AutoField(primary_key=True,)
     task_id = models.CharField(primary_key=True, max_length=30)
     is_parent = models.BooleanField(null=True)
-    child_task = models.ManyToManyField("self", null=True, symmetrical=False, related_name='parent_task',)
+    child_task = models.ManyToManyField("self", symmetrical=False, related_name='parent_task',)
     user_queued = models.ForeignKey(User, null=True, on_delete=models.DO_NOTHING)
     task_type = models.CharField(max_length=128, choices=TASK_TYPES)
     task_status = models.CharField(max_length=128, choices=TASK_STATUS)
@@ -133,6 +133,7 @@ class QueuedTask(models.Model):
     lat_min = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
     lon_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-180), MaxValueValidator(180)])
     lat_max = models.FloatField(null=True, blank=True, validators=[MinValueValidator(-90), MaxValueValidator(90)])
+    confidence_threshold = models.FloatField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(1)])
 
     zoom = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(50)])
     x_min = models.IntegerField(null=True, blank=True, validators=[MinValueValidator(0), MaxValueValidator(500000)])
@@ -152,7 +153,7 @@ class QueuedTask(models.Model):
 
 class DetectedObject(models.Model):
     id = models.CharField(primary_key=True, max_length=128)
-    task = models.ManyToManyField(QueuedTask, null=True, related_name="detected_objects")
+    task = models.ManyToManyField(QueuedTask, related_name="detected_objects")
     image = models.ForeignKey(SatteliteImage, related_name='image_id', on_delete=models.CASCADE)
     
     lon = models.FloatField(null=True,)

@@ -23,5 +23,5 @@ urlpatterns = [
     path("user/", include("users.urls")),
     path("", include("fetch_data.urls")),
     path('__debug__/', include(debug_toolbar.urls)),
-    
+
 ]

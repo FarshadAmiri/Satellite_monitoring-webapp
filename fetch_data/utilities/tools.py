@@ -49,6 +49,7 @@ def get_current_datetime():
     now = datetime.datetime.now()
     return now.strftime("%Y-%m-%dT%H:%M:%S")
 
+
 def shamsi_date_time():
     # Get the current Gregorian date and time
     today = jdatetime.date.today()

@@ -17,7 +17,7 @@ from PIL import Image
 import asyncio, logging, time, datetime
 from asgiref.sync import sync_to_async, async_to_sync
 from celery import shared_task
-import json , numpy as np
+import json , re, numpy as np
 from .forms import *
 from .models import *
 from fetch_data.utilities.tools import territory_divider, xyz2bbox_territory, coords_2_xyz_newton, get_current_datetime, territory_tags
@@ -29,7 +29,7 @@ concat_size_limit = 10000
 
 
 # @shared_task
-def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated, lon_min, lat_min, lon_max, lat_max, user):
+def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated, lon_min, lat_min, lon_max, lat_max, user, confidence_threshold=0.9):
     global fetch_chunk_size
     (x_min, x_max), (y_min, y_max) = x_range, y_range
     parent_total_queries = (x_max - x_min + 1) * (y_max - y_min + 1)
@@ -52,10 +52,10 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
     task_ids = [f"{parent_task_id}_part{i+1}" for i in range(len(territories))]
     task_type = "fetch_infer" if inference else "fetch"
 
-    parent_task = QueuedTask.objects.create(task_id=parent_task_id, is_parent=True, task_type=task_type, task_status="fetching", fetch_progress=0, 
+    parent_task = QueuedTask.objects.create(task_id=parent_task_id, is_parent=subtasks, task_type=task_type, task_status="fetching", fetch_progress=0, 
                            lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, 
                            zoom=zoom, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max,
-                           time_from=start_date, time_to=end_date, user_queued=user,)
+                           time_from=start_date, time_to=end_date, user_queued=user, confidence_threshold=confidence_threshold)
     
     territory_coords_parent = (lon_min, lat_min, lon_max, lat_max)
     area_tags_parent = territory_tags(territory_coords_parent, margin_neglect=0.01)
@@ -77,7 +77,7 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
             child_task = QueuedTask.objects.create(task_id=child_task_id, is_parent=False, task_type=task_type, task_status="fetching",
                                                 fetch_progress=0, lon_min=lon_min_child, lat_min=lat_min_child, lon_max=lon_max_child,
                                                 lat_max=lat_max_child, zoom=zoom, x_min=x_min_child, x_max=x_max_child, y_min=y_min_child, y_max=y_max_child,
-                                                time_from=start_date, time_to=end_date, user_queued=user,)
+                                                time_from=start_date, time_to=end_date, user_queued=user, confidence_threshold=confidence_threshold)
             parent_task.child_task.add(child_task)
             parent_task.save()
             area_tags_child = territory_tags(territory_coords_child, margin_neglect=0.01)
@@ -96,16 +96,16 @@ def fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, i
             t1 = time.perf_counter()
             parent_queries_done = territory_fetch_inference(x_range_child, y_range_child, zoom, start_date=start_date, end_date=end_date, child_task_id=child_task_id,
                                     parent_task_id=parent_task_id, subtasks=True ,parent_queries_done=parent_queries_done, parent_total_queries=parent_total_queries,
-                                    overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+                                    overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated, confidence_threshold=confidence_threshold)
             logging.info(f"{(time.perf_counter() - t1):.0f} seconds elapsed to fetch this territory")
         
         parent_task.task_status = "inferenced"
         parent_task.fetch_progress = 100
         parent_task.save()
     else:
-        territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, child_task_id=parent_task_id,
-                                  parent_task_id= None, subtasks=False ,parent_queries_done=None, parent_total_queries=None,
-                                  overwrite_repetitious=overwrite_repetitious, inference=inference, save_concated=save_concated)
+        territory_fetch_inference(x_range, y_range, zoom, start_date=start_date, end_date=end_date, child_task_id=parent_task_id, confidence_threshold=confidence_threshold,
+                                  parent_task_id= None, subtasks=False ,parent_queries_done=None, parent_total_queries=None, overwrite_repetitious=overwrite_repetitious,
+                                  inference=inference, save_concated=save_concated)
 
     return
 
@@ -115,7 +115,7 @@ def territory_fetch(request):
     # user = await sync_to_async(auth.get_user)(request)
     user = request.user
     if request.method == 'GET':
-        form = SentinelFetchForm()
+        form = SentinelFetchForm(initial={"confidence_threshold": 90})
         return render(request, "fetch_data/SentinelFetch.html", context={'preset_araes': PresetArea.objects.all(),'form': form, 'user': user})
 
     elif request.method == 'POST' and 'fetch' in request.POST and request.user.is_authenticated:
@@ -161,6 +161,7 @@ def territory_fetch(request):
 
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             inference = form.cleaned_data['inference']
+            confidence_threshold = float(int(form.cleaned_data['confidence_threshold']) / 100)
             if start_date > end_date:
                 message = 'Start date is greater than end date. Please modify your inputs.'
                 return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user, "error": "other", "message": message})
@@ -206,8 +207,9 @@ def territory_fetch(request):
             # fetch(territories, task_ids, task_type, x_min, x_max, y_min, y_max, zoom, start_date, end_date,
             #       overwrite_repetitious, inference, save_concated, lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max,)
             # t0 = time.perf_counter()
+            confidence_threshold = 0.9
             fetch(x_range, y_range, zoom, start_date, end_date, overwrite_repetitious, inference, save_concated,
-                  lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, user=user)
+                  lon_min=lon_min, lat_min=lat_min, lon_max=lon_max, lat_max=lat_max, user=user, confidence_threshold=confidence_threshold)
 
             # loop = asyncio.get_event_loop()
             # async_task = loop.create_task(fetch(territories, x_min, x_max, y_min, y_max, zoom, start_date, end_date, task_id, overwrite_repetitious, inference, save_concated))
@@ -249,13 +251,14 @@ def territory_fetch(request):
             inference = form.cleaned_data['inference']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             save_concated = True if request.POST.get('save_concated') == "True" else False
+            confidence_threshold = form.cleaned_data['confidence_threshold']
             form = SentinelFetchForm(initial={"x_min": x_min, "x_max": x_max, "y_min": y_min,
                                               "y_max": y_max,"zoom": zoom, "lon_min": lon_min,
                                               "lon_max": lon_max, "lat_min": lat_min,
                                               "lat_max": lat_max, "start_date": start_date, "end_date": end_date,
                                               "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
                                               "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area_id,
-                                              'inference': inference,
+                                              'inference': inference, "confidence_threshold": confidence_threshold,
                                                })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
         
@@ -280,13 +283,14 @@ def territory_fetch(request):
             inference = form.cleaned_data['inference']
             overwrite_repetitious = form.cleaned_data['overwrite_repetitious']
             save_concated = True if request.POST.get('save_concated') == "True" else False
+            confidence_threshold = form.cleaned_data['confidence_threshold']
             form = SentinelFetchForm(initial={"x_min": x_min, "x_max": x_max, "y_min": y_min,
                                                 "y_max": y_max,"zoom": zoom, "lon_min": lon_min,
                                                 "lon_max": lon_max, "lat_min": lat_min,
                                                 "lat_max": lat_max, "start_date": start_date, "end_date": end_date,
                                                 "base_date": base_date, "n_days_before_base_date": n_days_before_base_date,
                                                 "overwrite_repetitious": overwrite_repetitious, "preset_area": preset_area,
-                                                'inference': inference,
+                                                'inference': inference, "confidence_threshold": confidence_threshold,
                                                 })
             return render(request, "fetch_data/SentinelFetch.html", {'form': form, 'user':request.user})
         logging.info("\n\n\n\Last 10 days form is not valid\n\n\n")
@@ -421,11 +425,28 @@ def TasksTable(request, mode, time_limit):
 
 
 @login_required(login_url='users:login')
-def TaskResult(request, task_id):
+def TaskResult(request, task_id, filters):
     user = request.user
+    filters_dict = dict()
+
+    # extract filter paramters and their values
+    pattern = r"L\[min\]=(\d+)&L\[max\]=(\d+)"
+    matches = re.search(pattern, filters)
+    if matches:
+        l_min = matches.group(1)
+        l_max = matches.group(2)
+        l_min = 0 if l_min in [None, "", " "] else l_min
+        l_max = 620 if l_max in [None, "", " "] else l_max
+        l_min, l_max = int(l_min), int(l_max)
+        filters_dict["L"] = (l_min, l_max)
+
     if request.method=="GET" and request.user.is_authenticated:
         task = QueuedTask.objects.get(task_id=task_id)
-        detected_objects = task.detected_objects.all().order_by('-length')
+        if "L" in filters:
+            l_min, l_max = filters_dict["L"]
+            detected_objects = task.detected_objects.filter(length__gte=l_min, length__lte=l_max).order_by('-length')
+        else:
+            detected_objects = task.detected_objects.all().order_by('-length')
         n_objects = len(detected_objects)
         paginator = Paginator(detected_objects, 50)
         num_pages = paginator.num_pages
@@ -436,7 +457,9 @@ def TaskResult(request, task_id):
             page_objects = paginator.page(1)
         except EmptyPage:    # if page is empty then return last page
             page_objects = paginator.page(paginator.num_pages)
-        context={'task': task, 'page_objects': page_objects, "n_objects": n_objects, "num_pages": num_pages,}
+        context={'task': task, 'page_objects': page_objects, "n_objects": n_objects, "num_pages": num_pages, "pages_range": paginator.page_range,  }
+        if "L" in filters:
+            context["L"] = (l_min, l_max)
         return render(request, "fetch_data/Task_Result.html", context=context)
 
 
@@ -474,7 +497,7 @@ def CustomAnnotation(request, task_id):
     l_min = request.POST.get('l_min')
     l_max = request.POST.get('l_max')
     l_min = 0 if l_min in [None, "", " "] else l_min
-    l_max = 700 if l_max in [None, "", " "] else l_max
+    l_max = 620 if l_max in [None, "", " "] else l_max
     l_min, l_max = int(l_min), int(l_max)
     print("\n\n\nL Min: ", l_min)
     print("\n\n\nL Max: ", l_max)
@@ -496,7 +519,7 @@ def CustomAnnotation(request, task_id):
         custom_inferenced_img = draw_bbox_torchvision(concated_img, bboxes, scores, lengths=lengths, ships_coords=ships_coords, annotations=["score", "length", "coord"], save=False,
                           image_save_name=None, output_annotated_image=True, font_size=14, font=r"calibri.ttf", bbox_width=2, constraints=constraints)
         custom_inferenced_img.show()
-        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, "filters": f"L[min]={l_min}&L[max]={l_max}"}))
     else:
         messages.warning(request, f"Area is too large for custom inferencing! This area consists of {concated_size} tiles while there is a limitation of {concat_size_limit} tiles to be concatenated on server.")
-        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, }))

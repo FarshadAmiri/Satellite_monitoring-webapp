@@ -17,6 +17,9 @@
 <script type="text/javascript" src="{% static 'js/datatables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.20.0/dist/bootstrap-table.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
 <style>
 .sortable {
   cursor: pointer;
@@ -53,13 +56,16 @@
         </div>
         </div>
         <div class="row">
-        <div class="col-4">
+        <div class="col-3">
+        <h5>Task ID: <span class="result-meta-purple">{{ task.task_id }}</span></h5>
+        </div>
+        <div class="col-3">
         <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span></h5>
         </div>
-        <div class="col-4">
+        <div class="col-3">
             <h5><span class="result-meta">{{ n_objects }}</span> Objects founded</h5>
         </div>
-        <div class="col-4">
+        <div class="col-3">
          <h5><span>{% if task.task_status == "fetching" %}<span>Fetch in progress</span>{% elif task.task_status == "fetched" %}<span>Fetching completed</span>{% elif task.task_status == "inferencing" %}<span>Inference in progress</span>{% elif task.task_status == "inferenced" %}<span>Inferencing completed</span>{% endif %}</span></h5>
         </div>
         </div>
@@ -80,14 +86,14 @@
                     <div class="row">
                         <div class="col-4">
                             <label for="l_min" style="font-weight: bold">Min length</label>
-                            <input type="number" class="form-control form-control-sm" id="l_min" name="l_min">
+                            <input type="number" class="form-control form-control-sm" id="l_min" name="l_min" style="font-weight: bold;" value="{{ L.0|default:'' }}">
                         </div>
                         <div class="col-4">
                             <label for="l_max" style="font-weight: bold">Max length</label>
-                            <input type="number" class="form-control form-control-sm" id="l_max" name="l_max">
+                            <input type="number" class="form-control form-control-sm" id="l_max" name="l_max" style="font-weight: bold;" value="{{ L.1|default:'' }}">
                         </div>
                         <div class="col-4">
-                            <button type="submit" class="btn btn-primary" style="padding: 2px">Custom annotations</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 2px">Filtered annotations</button>
                         </div>
                     </div>
                 </div>
@@ -98,37 +104,85 @@
 </div>
             <nav style="text-align: center; background-color: White; padding-top: 10px">
                 <ul class="pagination">
-                {% if page_objects.has_previous %} {# whether the previous page exists #}
-                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{page_objects.previous_page_number}}">Previous</a></li>
+                {# First #}
+                {% comment %} {% for n_page in range(1, num_pages + 1) %} {% endcomment %}
+                {% if num_pages <= 10 %}
+                {% for n_page in pages_range %}
+                    {% if n_page == page_objects.number %}
+                        <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                    {% endif %}
+                {% endfor %}
                 {% else %}
-                    <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
+                {% for n_page in pages_range %}
+                    {% if n_page <= 10 %}
+                        {% if n_page == page_objects.number %}
+                            <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                        {% endif %}
+                    {% endif %}
+                    <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                {% endfor %}
                 {% endif %}
-                {% if page_objects.has_next and page_parent_tasks.has_previous%}
+                
+
+                {% comment %} {% if page_objects.number == 1 %} 
+                <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+                {% endif %}
+
+                {# Previous #}
+                {% if page_objects.number > 2 %}
+                    <li class="page-item"><a class="page-link" href="?page={{page_objects.previous_page_number}}">{{page_objects.number|sub:-1}}</a></li>
+                {% endif %}
+
+                {# Current #}
+                {% if page_objects.number > 1 and page_objects != num_pages %} 
+                <li class="page-item active"> <a class="page-link" href="#">{{page_objects.number}}<span class="sr-only"></span></a></li>
+                {% endif %}
+
+                {# Next #}
+                {% if page_objects.has_next and page_objects.number < num_pages %}
+                <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">{{page_objects.number|add:1}}</a></li>
+                {% endif %} 
+
+                {# Last #}
+                {% if num_pages > 1 and page_objects.number == num_pages %}
+                <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                {% elif num_pages > 1 and page_objects.number != num_pages %}
+                <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                {% endif %} {% endcomment %}
+
+
+
+                {% comment %} {% if page_objects.has_next and page_parent_tasks.has_previous%}
                     <li class="page-item active"> <a class="page-link" href="#">{{page_objects.number}}<span class="sr-only"></span></a></li>
                 {% endif %}
-                {% comment %} <span>{{page_parent_tasks.number}}</span> {% endcomment %}
-                    {% comment %} <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=2">2</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=3">3</a></li> {% endcomment %}
                 {% if page_objects.has_next%} {# whether the previous page exists #}
                     <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">Next</a></li>
                     <li class="page-item"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
                 {% else%}
                     <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% endif %}
+                {% endif %} {% endcomment %}
                 </ul>
             </nav>
-        <table class="table table-responsive" style="margin-top: 2px; padding-top: 2px; " id="example">
+        <table class="table table-responsive" style="margin-top: 2px; padding-top: 2px; " id="objects_table">
         {% comment %} <table id="dtBasicExample" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%"> {% endcomment %}
         {% comment %} <table id="example" class="table table-striped table-bordered" cellspacing="0" width="100%"> {% endcomment %}
             <thead>
             <tr>
-                <th scope="col">#</th>
-                <th scope="col">Watercraft type</th>
-                <th scope="col" class="sortable" data-sort-field="2">Length</th>
-                <th scope="col">Awake</th>
-                <th scope="col">Confidence</th>
+                <th scope="col" style="width: 80px;">#</th>
+                {% if task.is_parent %}
+                    <th scope="col">Task ID</th>
+                {% endif %}
+                <th scope="col" data-sortable="true">Watercraft type</th>
+                <th scope="col" data-sortable="true">Length</th>
+                <th scope="col" data-sortable="true">Awake</th>
+                <th scope="col" data-sortable="true">Confidence</th>
                 <th scope="col">Lon</th>
                 <th scope="col">Lat</th>
                 <th scope="col">Image</th>
@@ -137,6 +191,15 @@
             {% for obj in page_objects %}
             <tr data-toggle="collapse" data-target=".details-row">
                 <td>{{ page_objects.start_index|add:forloop.counter0 }}</td>
+                {% if task.is_parent %}
+                    <td>
+                        {% for related_task in obj.task.all %}
+                            {% if not related_task.is_parent %}
+                                <a href="{% url 'fetch_data:task_result' task_id=related_task.task_id filters=None %}">{{ related_task.task_id }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                {% endif %}
                 <td>{{ obj.object_type }}</td>
                 <td>{{ obj.length }}</td>
                 <td>{{ obj.awake }}</td>
@@ -183,4 +246,13 @@
             </nav>
     </div>
 </div>
+{% endblock %}
+
+
+{% block static-end_body %}
+<script>
+  $(document).ready(function() {
+    $('#objects_table').bootstrapTable();
+  });
+</script>
 {% endblock %}

@@ -157,8 +157,8 @@
     <div class="form-group mx-sm-3 mb-2">
     <br>
     <div id="other_parameters" >
-        <div class="row" style="background-color: #B3DAFF ; padding: 16px; border-radius: 25px; justify-content: center; align-items: center; margin-right: 15px;">
-            <div class="col-4" style="color: #000000; font-size: 17px;">
+        <div class="row" style="background-color: #B3DAFF ; padding: 14px; border-radius: 25px; justify-content: center; align-items: center; margin-right: 15px; ">
+            <div class="col-4" style="color: #000000; font-size: 17px; padding-left: 60px;">
                 <label for="overwrite_repetitious" style="font-weight: bold">Overwrite existing images&nbsp</label>
                 {% comment %} <input class="checkbox" type="checkbox" id="overwrite_repetitious" name="overwrite_repetitious" value="{{ form.overwrite_repetitious.value|escape }}"> {% endcomment %}
                     {{ form.overwrite_repetitious }}
@@ -167,6 +167,11 @@
                 <label for="inference" style="font-weight: bold">Apply watercraft detection&nbsp</label>
                 {% comment %} <input class="checkbox" type="checkbox" id="inference" name="inference" value="{{ form.inference.value|escape }}"> {% endcomment %}
                     {{ form.inference }}
+            </div>
+            <div class="col-4" style="color: #000000; font-size: 17px;">
+                    <label class="form-label" for="confidence_threshold" style="font-weight: bold">Detection score threshold:&nbsp</label>
+                    <input class="" type="number" step="1" id="confidence_threshold" name="confidence_threshold" min="80" max="95" value="{{ form.confidence_threshold.value|escape }}" style="width: 46px; font-weight: bold">
+                    <label class="form-label" for="confidence_threshold" style="font-weight: bold">%</label>
             </div>
             {% comment %} <div class="col-4" style="color: #000000; font-size: 17px;">
                     <label class="form-check-label" for="save_concated" style="font-weight: bold">Save concatenated&nbsp</label>
