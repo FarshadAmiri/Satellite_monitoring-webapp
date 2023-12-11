@@ -17,9 +17,8 @@
 <script type="text/javascript" src="{% static 'js/datatables.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/responsive.bootstrap5.min.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.20.0/dist/bootstrap-table.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.18.2/dist/bootstrap-table.min.css">
+<script src="{% static 'js/bootstrap-table.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/bootstrap-table.min.css' %}">
 <style>
 .sortable {
   cursor: pointer;
@@ -57,7 +56,7 @@
         </div>
         <div class="row">
         <div class="col-3">
-        <h5>Task ID: <span class="result-meta-purple">{{ task.task_id }}</span></h5>
+        <h5>Task ID: <span class="result-meta-purple">{{ task.task_id }}</span>{% if parent_task %}<span class="result-meta-black-normal">&nbsp(Parent: <a href="{% url 'fetch_data:task_result' parent_task 'None' %}"><span class="result-meta-blue">{{ parent_task }}</span></a>){% endif %}</span></h5>
         </div>
         <div class="col-3">
         <h5>Fetch progress: <span class="result-meta-green">{{ task.fetch_progress }}%</span></h5>
@@ -123,69 +122,35 @@
                             <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
                         {% endif %}
                     {% endif %}
+                    {% endfor %}
+                    {% if page_objects.number > 10 %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ page_objects.number }}">{{ page_objects.number }}</a></li>
+                    {% endif %}
+                    {% if page_objects.has_next %}
                     <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">Next</a></li>
+                    {% endif %}
+                    {% if page_objects.number != num_pages %}
                     <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
-                {% endfor %}
+                    {% endif %}
                 {% endif %}
-                
-
-                {% comment %} {% if page_objects.number == 1 %} 
-                <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
-                {% else %}
-                <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                {% endif %}
-
-                {# Previous #}
-                {% if page_objects.number > 2 %}
-                    <li class="page-item"><a class="page-link" href="?page={{page_objects.previous_page_number}}">{{page_objects.number|sub:-1}}</a></li>
-                {% endif %}
-
-                {# Current #}
-                {% if page_objects.number > 1 and page_objects != num_pages %} 
-                <li class="page-item active"> <a class="page-link" href="#">{{page_objects.number}}<span class="sr-only"></span></a></li>
-                {% endif %}
-
-                {# Next #}
-                {% if page_objects.has_next and page_objects.number < num_pages %}
-                <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">{{page_objects.number|add:1}}</a></li>
-                {% endif %} 
-
-                {# Last #}
-                {% if num_pages > 1 and page_objects.number == num_pages %}
-                <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
-                {% elif num_pages > 1 and page_objects.number != num_pages %}
-                <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
-                {% endif %} {% endcomment %}
-
-
-
-                {% comment %} {% if page_objects.has_next and page_parent_tasks.has_previous%}
-                    <li class="page-item active"> <a class="page-link" href="#">{{page_objects.number}}<span class="sr-only"></span></a></li>
-                {% endif %}
-                {% if page_objects.has_next%} {# whether the previous page exists #}
-                    <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% else%}
-                    <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% endif %} {% endcomment %}
                 </ul>
             </nav>
-        <table class="table table-responsive" style="margin-top: 2px; padding-top: 2px; " id="objects_table">
+        <table class="table table-responsive" style="margin-top: 2px; padding-top: 2px;" id="objects_table">
         {% comment %} <table id="dtBasicExample" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%"> {% endcomment %}
         {% comment %} <table id="example" class="table table-striped table-bordered" cellspacing="0" width="100%"> {% endcomment %}
             <thead>
             <tr>
-                <th scope="col" style="width: 80px;">#</th>
+                <th scope="col" data-width="60">#</th>
                 {% if task.is_parent %}
                     <th scope="col">Task ID</th>
                 {% endif %}
-                <th scope="col" data-sortable="true">Watercraft type</th>
+                <th scope="col" data-sortable="true" data-width="200">Watercraft type</th>
                 <th scope="col" data-sortable="true">Length</th>
                 <th scope="col" data-sortable="true">Awake</th>
                 <th scope="col" data-sortable="true">Confidence</th>
-                <th scope="col">Lon</th>
-                <th scope="col">Lat</th>
-                <th scope="col">Image</th>
+                <th scope="col" data-sortable="true">Lon</th>
+                <th scope="col" data-sortable="true">Lat</th>
+                <th scope="col" data-width="150">Image</th>
             </tr>
             </thead>
             {% for obj in page_objects %}
@@ -221,26 +186,37 @@
             </tr>
             {% endfor %}
         </table>
-            <nav style="text-align: center; background-color: White;">
+            <nav style="text-align: center; background-color: White; padding-top: 10px">
                 <ul class="pagination">
-                {% if page_objects.has_previous %} {# whether the previous page exists #}
-                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{page_objects.previous_page_number}}">Previous</a></li>
+                {# First #}
+                {% comment %} {% for n_page in range(1, num_pages + 1) %} {% endcomment %}
+                {% if num_pages <= 10 %}
+                {% for n_page in pages_range %}
+                    {% if n_page == page_objects.number %}
+                        <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                    {% endif %}
+                {% endfor %}
                 {% else %}
-                    <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
-                {% endif %}
-                {% if page_objects.has_next and page_parent_tasks.has_previous%}
-                    <li class="page-item active"> <a class="page-link" href="#">{{page_objects.number}}<span class="sr-only"></span></a></li>
-                {% endif %}
-                {% comment %} <span>{{page_parent_tasks.number}}</span> {% endcomment %}
-                    {% comment %} <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=2">2</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=3">3</a></li> {% endcomment %}
-                {% if page_objects.has_next%} {# whether the previous page exists #}
+                {% for n_page in pages_range %}
+                    {% if n_page <= 10 %}
+                        {% if n_page == page_objects.number %}
+                            <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                        {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_objects.number > 10 %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ page_objects.number }}">{{ page_objects.number }}</a></li>
+                    {% endif %}
+                    {% if page_objects.has_next %}
                     <li class="page-item"><a class="page-link" href="?page={{page_objects.next_page_number}}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% else%}
-                    <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
+                    {% endif %}
+                    {% if page_objects.number != num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                    {% endif %}
                 {% endif %}
                 </ul>
             </nav>

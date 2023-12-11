@@ -421,7 +421,8 @@ def TasksTable(request, mode, time_limit):
         except EmptyPage:    # if page is empty then return last page
             page_parent_tasks = paginator.page(paginator.num_pages)
 
-        return render(request, "fetch_data/Fetches_table.html", context={'page_parent_tasks': page_parent_tasks, 'user':user, 'all_tasks': all_tasks, "num_pages": num_pages})
+        return render(request, "fetch_data/Fetches_table.html", context={'page_parent_tasks': page_parent_tasks, 'user':user, 'all_tasks': all_tasks,
+                                                                         "num_pages": num_pages, "pages_range": paginator.page_range,})
 
 
 @login_required(login_url='users:login')
@@ -448,7 +449,7 @@ def TaskResult(request, task_id, filters):
         else:
             detected_objects = task.detected_objects.all().order_by('-length')
         n_objects = len(detected_objects)
-        paginator = Paginator(detected_objects, 50)
+        paginator = Paginator(detected_objects, 25)
         num_pages = paginator.num_pages
         page_number = request.GET.get('page')
         try:
@@ -458,6 +459,9 @@ def TaskResult(request, task_id, filters):
         except EmptyPage:    # if page is empty then return last page
             page_objects = paginator.page(paginator.num_pages)
         context={'task': task, 'page_objects': page_objects, "n_objects": n_objects, "num_pages": num_pages, "pages_range": paginator.page_range,  }
+        if task.parent_task.all().first() != None:
+            parent_task = task.parent_task.all().first().task_id
+            context["parent_task"] = parent_task
         if "L" in filters:
             context["L"] = (l_min, l_max)
         return render(request, "fetch_data/Task_Result.html", context=context)
@@ -469,7 +473,7 @@ def ImageGet(request, task_id, image_dir):
     img = Image.open(image_dir_annotated)
     img.show()
     # return HttpResponse(img, content_type="image/png")
-    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, "filters":"None"}))
 
 
 @login_required(login_url='users:login')
@@ -481,12 +485,12 @@ def ConcatImage(request, mode, task_id):
     x_range, y_range, zoom = (task.x_min, task.x_max), (task.y_min , task.y_max), task.zoom
     if (x_range[1] - x_range[0] + 1) * (y_range[1] - y_range[0] + 1) > concat_size_limit:
         messages.warning(request, "Area is too large for image concatenation!")
-        return HttpResponseRedirect(reverse('fetch_data:task_result' , kwargs={"task_id": task_id,}))
+        return HttpResponseRedirect(reverse('fetch_data:task_result' , kwargs={"task_id": task_id, "filters":"None"}))
     start, end = task.time_from, task.time_to
     concated_img = concatenate_image(x_range, y_range, zoom, start, end, annotated=annotated, images_db_path=images_db_path, return_img=True,
                     save_img=False,)
     concated_img.show()
-    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id}))
+    return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, "filters":"None"}))
 
 
 
@@ -522,4 +526,4 @@ def CustomAnnotation(request, task_id):
         return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, "filters": f"L[min]={l_min}&L[max]={l_max}"}))
     else:
         messages.warning(request, f"Area is too large for custom inferencing! This area consists of {concated_size} tiles while there is a limitation of {concat_size_limit} tiles to be concatenated on server.")
-        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, }))
+        return HttpResponseRedirect(reverse('fetch_data:task_result', kwargs={"task_id": task_id, "filters":"None" }))

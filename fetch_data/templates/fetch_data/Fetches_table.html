@@ -140,52 +140,74 @@
             {% endfor %}
             {% comment %} <div class="pagination"> {% endcomment %}
             
-            <nav style="text-align: center; background-color: White;">
+            <nav style="text-align: center; background-color: White; padding-top: 10px">
                 <ul class="pagination">
-                {% if page_parent_tasks.has_previous %} {# whether the previous page exists #}
-                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{page_parent_tasks.previous_page_number}}">Previous</a></li>
+                {# First #}
+                {% comment %} {% for n_page in range(1, num_pages + 1) %} {% endcomment %}
+                {% if num_pages <= 10 %}
+                {% for n_page in pages_range %}
+                    {% if n_page == page_parent_tasks.number %}
+                        <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                    {% endif %}
+                {% endfor %}
                 {% else %}
-                    <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
-                {% endif %}
-                {% if page_parent_tasks.has_next and page_parent_tasks.has_previous%}
-                    <li class="page-item active"> <a class="page-link" href="#">{{page_parent_tasks.number}}<span class="sr-only"></span></a></li>
-                {% endif %}
-                {% comment %} <span>{{page_parent_tasks.number}}</span> {% endcomment %}
-                    {% comment %} <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=2">2</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=3">3</a></li> {% endcomment %}
-                {% if page_parent_tasks.has_next%} {# whether the previous page exists #}
+                {% for n_page in pages_range %}
+                    {% if n_page <= 10 %}
+                        {% if n_page == page_parent_tasks.number %}
+                            <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                        {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_parent_tasks.number > 10 %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ page_parent_tasks.number }}">{{ page_parent_tasks.number }}</a></li>
+                    {% endif %}
+                    {% if page_parent_tasks.has_next %}
                     <li class="page-item"><a class="page-link" href="?page={{page_parent_tasks.next_page_number}}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% else%}
-                    <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
+                    {% endif %}
+                    {% if page_parent_tasks.number != num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                    {% endif %}
                 {% endif %}
                 </ul>
             </nav>
             </div>
             <tbody>
         </table>
-            <nav style="text-align: center; background-color: White;">
+            <nav style="text-align: center; background-color: White; padding-top: 10px">
                 <ul class="pagination">
-                {% if page_parent_tasks.has_previous %} {# whether the previous page exists #}
-                    <li class="page-item"><a class="page-link" href="?page=1">First</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{page_parent_tasks.previous_page_number}}">Previous</a></li>
+                {# First #}
+                {% comment %} {% for n_page in range(1, num_pages + 1) %} {% endcomment %}
+                {% if num_pages <= 10 %}
+                {% for n_page in pages_range %}
+                    {% if n_page == page_parent_tasks.number %}
+                        <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                    {% endif %}
+                {% endfor %}
                 {% else %}
-                    <li class="page-item active"><a class="page-link" href="?page=1">1</a></li>
-                {% endif %}
-                {% if page_parent_tasks.has_next and page_parent_tasks.has_previous%}
-                    <li class="page-item active"> <a class="page-link" href="#">{{page_parent_tasks.number}}<span class="sr-only"></span></a></li>
-                {% endif %}
-                {% comment %} <span>{{page_parent_tasks.number}}</span> {% endcomment %}
-                    {% comment %} <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=2">2</a></li>
-                    <li class="page-item"><a class="page-link" href="?page=3">3</a></li> {% endcomment %}
-                {% if page_parent_tasks.has_next%} {# whether the previous page exists #}
+                {% for n_page in pages_range %}
+                    {% if n_page <= 10 %}
+                        {% if n_page == page_parent_tasks.number %}
+                            <li class="page-item active"><a class="page-link" href="?page={{n_page}}">{{ n_page }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ n_page }}">{{ n_page }}</a></li>
+                        {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_parent_tasks.number > 10 %}
+                    <li class="page-item active"><a class="page-link" href="?page={{ page_parent_tasks.number }}">{{ page_parent_tasks.number }}</a></li>
+                    {% endif %}
+                    {% if page_parent_tasks.has_next %}
                     <li class="page-item"><a class="page-link" href="?page={{page_parent_tasks.next_page_number}}">Next</a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
-                {% else%}
-                    <li class="page-item active"><a class="page-link" href="?page={{num_pages}}">Last</a></li>
+                    {% endif %}
+                    {% if page_parent_tasks.number != num_pages %}
+                    <li class="page-item"><a class="page-link" href="?page={{num_pages}}">{{num_pages}}</a></li>
+                    {% endif %}
                 {% endif %}
                 </ul>
             </nav>
